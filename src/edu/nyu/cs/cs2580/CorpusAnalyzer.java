@@ -93,7 +93,18 @@ public abstract class CorpusAnalyzer {
     _options = options;
   }
   
-  // Processes the corpus and prepare necessary internal data structure for the
+  public CorpusAnalyzer() {
+      try {
+        Options options = new Options("conf/engine.conf");
+        _options = options;
+    } catch (IOException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+    }
+      
+  }
+
+// Processes the corpus and prepare necessary internal data structure for the
   // compute function below.
   public abstract void prepare() throws IOException;
 

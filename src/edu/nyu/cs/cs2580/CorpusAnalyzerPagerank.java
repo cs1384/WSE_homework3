@@ -1,13 +1,44 @@
 package edu.nyu.cs.cs2580;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
 
 import edu.nyu.cs.cs2580.SearchEngine.Options;
 
 /**
  * @CS2580: Implement this class for HW3.
  */
-public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
+public class CorpusAnalyzerPagerank extends CorpusAnalyzer implements Serializable{
+    private static final long serialVersionUID = 1077111905740085032L;
+    Map<String, Integer> _fileN = new HashMap<String, Integer>();
+    PageInfo[] _op;
+    double[] _rank;
+    
+    double lambda = 0.5; 
+    int iterationTimes = 1;
+    
+    public class PageInfo implements Serializable{
+        int linkN = 0;
+        LinkedList<Integer> fromPages = new LinkedList<Integer>();
+    }
+    
+  //Provided for serialization
+  public CorpusAnalyzerPagerank(){ super();}
+    
   public CorpusAnalyzerPagerank(Options options) {
     super(options);
   }
@@ -34,9 +65,77 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
   @Override
   public void prepare() throws IOException {
     System.out.println("Preparing " + this.getClass().getName());
+    printRuntimeInfo("===== start preparing! =====");
+    
+    File folder = new File(this._options._corpusPrefix);
+    ArrayList<File> fileList = new ArrayList<File>();
+    for (final File file : folder.listFiles()){
+        if(isValidDocument(file)){
+            fileList.add(file);
+        }
+    }
+    
+    int n = 0;
+    for(final File file : fileList){
+        _fileN.put(file.getName(), n++);
+    }
+    
+    _op = new PageInfo[n];
+    for(final File file: fileList){
+        processDocument(file);
+    }
+    
+    printRuntimeInfo("===== finish preparing! =====");
+    System.out.println(this._op.length + "pages scanned!");
     return;
   }
-
+  
+  public void processDocument(File file){
+      int linkN = 0;
+      try {
+          //set up fromPage
+          HeuristicLinkExtractor extractor = new HeuristicLinkExtractor(file);
+          int from = _fileN.get(extractor.getLinkSource());
+          //System.out.println("processing page " + from);
+          if(_op[from]==null){
+              _op[from] = new PageInfo();
+          }
+          Set<String> uniqueLinks = new HashSet<String>();
+          //find the link in fromPage and update the PageInfo
+          String toPage = extractor.getNextInCorpusLinkTarget();
+          while(toPage!=null){
+              if(!uniqueLinks.contains(toPage) && 
+                      _fileN.containsKey(toPage)){
+                  uniqueLinks.add(toPage);
+                  int to = _fileN.get(toPage);
+                  if(_op[to]==null){
+                      _op[to] = new PageInfo();
+                  }
+                  _op[to].fromPages.add(from);
+                  linkN++;
+              }
+              toPage = extractor.getNextInCorpusLinkTarget();
+          }
+          _op[from].linkN = linkN;
+      } catch (IOException e) {
+          e.printStackTrace();
+      } 
+      
+  }
+  
+  
+  public void setLambda(double lambda){
+      this.lambda = lambda;
+  }
+  public double getLambda(){
+      return this.lambda;
+  }
+  public void setInterationTimes(int times){
+      this.iterationTimes = times;
+  }
+  public int getInterationTimes(){
+      return this.iterationTimes;
+  }
   /**
    * This function computes the PageRank based on the internal graph generated
    * by the {@link prepare} function, and stores the PageRank to be used for
@@ -53,7 +152,56 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
   @Override
   public void compute() throws IOException {
     System.out.println("Computing using " + this.getClass().getName());
+    printRuntimeInfo("===== start computing! =====");
+    
+    if(_op==null){
+        System.out.println("Prepare first!");
+        return;
+    }
+    //initialize the _rank array
+    _rank = new double[_op.length];
+    for(int i=0;i<_rank.length;i++){
+        _rank[i] = (double)1/_rank.length;
+    }
+    //iteration(s)
+    for(int k=0;k<this.iterationTimes;k++){
+        double[] newRank = new double[_rank.length];
+        for(int i=0;i<_op.length;i++){
+            double get = 0.0;
+            Iterator it=_op[i].fromPages.iterator();
+            int from;
+            while(it.hasNext()){
+                from = (int)it.next();
+                get += (double)_rank[from]/_op[from].linkN;
+            }
+            if(_op[i].linkN==0){
+                rankSink(i, newRank);
+            }
+            //System.out.println("get "+get);
+            newRank[i] += (lambda/_op.length) + (1-lambda)*get;
+        }
+        //printTest(newRank);
+        this._rank = newRank;
+    }
+    
+    printRuntimeInfo("===== finish computing! =====");
+    System.out.println(this._rank.length + " pages ranked!");
+    
+    String rankFile = _options._indexPrefix + "/pageRank.idx";
+    System.out.println("Store pagerank to: " + rankFile);
+    ObjectOutputStream writer
+        = new ObjectOutputStream(new FileOutputStream(rankFile));
+    writer.writeObject(this); //write the entire class into the file
+    writer.close();
     return;
+  }
+  public void rankSink(int where, double[] a){
+      double add = _rank[where]/(a.length-1)*lambda;
+      for(int i=0;i<a.length;i++){
+          if(i!=where){
+              a[i] += add;
+          }
+      }
   }
 
   /**
@@ -65,6 +213,79 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
   @Override
   public Object load() throws IOException {
     System.out.println("Loading using " + this.getClass().getName());
+    this.printRuntimeInfo("======== start loading =========");
+    
+    String indexFile = _options._indexPrefix + "/pageRank.idx";
+    System.out.println("Load pagerank from: " + indexFile);
+    
+    try {
+    ObjectInputStream reader =
+            new ObjectInputStream(new FileInputStream(indexFile));
+        CorpusAnalyzerPagerank loaded = 
+            (CorpusAnalyzerPagerank) reader.readObject();
+        
+        this._fileN = loaded._fileN;
+        this._op = loaded._op;
+        this._options = loaded._options;
+        this._rank = loaded._rank;
+        this.iterationTimes = loaded.iterationTimes;
+        this.lambda = loaded.lambda;
+        reader.close();
+        
+    } catch (ClassNotFoundException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+    }
+    
+    printRuntimeInfo("======== done loading =========");
     return null;
+  }
+ 
+  public void printTest(double[] n){
+      for(int i=0;i<_op.length;i++){
+          System.out.println("Page " + i + " has " + _op[i].linkN + " links");
+          System.out.print(" and incoming links from ");
+          Iterator it = _op[i].fromPages.iterator();
+          int index;
+          while(it.hasNext()){
+              index = (int)it.next();
+              System.out.print(index + "(" + _rank[index] + "/" + _op[index].linkN + ") ");
+          }
+          System.out.println();
+          System.out.println("which gets us " + n[i]);
+          System.out.println();
+      }
+  }
+  public void printRuntimeInfo(String msg){
+      System.out.println();
+      System.out.println(msg);
+      System.out.println(new Date());
+      int mb = 1024;
+      Runtime rt = Runtime.getRuntime();
+      System.out.print(rt.freeMemory()/mb + ", ");
+      System.out.print(rt.totalMemory()/mb + ", ");
+      System.out.print(rt.maxMemory()/mb + ", ");
+      System.out.println("used " + (rt.totalMemory() - rt.freeMemory())/mb + "KB");
+    }
+  public static void main(String[] args) throws IOException{
+      Options options = new Options("conf/engine.conf");
+      CorpusAnalyzerPagerank ca = new CorpusAnalyzerPagerank(options);
+      ca.prepare();
+      ca.compute();
+      ca.load();
+      
+      System.out.println(ca._rank.length + " pages");
+      System.out.println("===== first 10 result =====");
+      double sum = 0.0;
+      for(int i=0;i<ca._rank.length && i<10;i++){
+          System.out.print(ca._rank[i] + ",");
+          sum += ca._rank[i];
+      }
+      System.out.println();
+      System.out.println("sum: " + sum);
+      
+      System.out.println(ca._fileN.get("Blue_whale"));
+      
+      
   }
 }
