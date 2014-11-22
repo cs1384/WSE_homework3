@@ -270,10 +270,11 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer implements Serializab
   public static void main(String[] args) throws IOException{
       Options options = new Options("conf/engine.conf");
       CorpusAnalyzerPagerank ca = new CorpusAnalyzerPagerank(options);
-      ca.prepare();
-      ca.compute();
-      ca.load();
+      //ca.prepare();
+      //ca.compute();
+      //ca.load();
       
+      /*
       System.out.println(ca._rank.length + " pages");
       System.out.println("===== first 10 result =====");
       double sum = 0.0;
@@ -284,5 +285,6 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer implements Serializab
       System.out.println();
       System.out.println("sum: " + sum);
       System.out.println(ca._fileN.get("Blue_whale"));
+      */
   }
 }
