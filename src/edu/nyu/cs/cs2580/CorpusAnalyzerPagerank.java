@@ -24,12 +24,13 @@ import edu.nyu.cs.cs2580.SearchEngine.Options;
  */
 public class CorpusAnalyzerPagerank extends CorpusAnalyzer implements Serializable{
     private static final long serialVersionUID = 1077111905740085032L;
-    Map<String, Integer> _fileN = new HashMap<String, Integer>();
-    PageInfo[] _op;
-    double[] _rank;
+    private Map<String, Integer> _fileN = new HashMap<String, Integer>();
+    private PageInfo[] _op;
+    private float[] _rank;
     
-    double lambda = 0.5; 
-    int iterationTimes = 1;
+    
+    private float lambda = 0.5f; 
+    private int iterationTimes = 1;
     
     public class PageInfo implements Serializable{
         int linkN = 0;
@@ -41,6 +42,7 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer implements Serializab
     
   public CorpusAnalyzerPagerank(Options options) {
     super(options);
+    System.out.println("create");
   }
 
   /**
@@ -86,7 +88,7 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer implements Serializab
     }
     
     printRuntimeInfo("===== finish preparing! =====");
-    System.out.println(this._op.length + "pages scanned!");
+    System.out.println(this._op.length + " pages scanned!");
     return;
   }
   
@@ -124,10 +126,10 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer implements Serializab
   }
   
   
-  public void setLambda(double lambda){
+  public void setLambda(float lambda){
       this.lambda = lambda;
   }
-  public double getLambda(){
+  public float getLambda(){
       return this.lambda;
   }
   public void setInterationTimes(int times){
@@ -159,20 +161,20 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer implements Serializab
         return;
     }
     //initialize the _rank array
-    _rank = new double[_op.length];
+    _rank = new float[_op.length];
     for(int i=0;i<_rank.length;i++){
-        _rank[i] = (double)1/_rank.length;
+        _rank[i] = (float)1/_rank.length;
     }
     //iteration(s)
     for(int k=0;k<this.iterationTimes;k++){
-        double[] newRank = new double[_rank.length];
+        float[] newRank = new float[_rank.length];
         for(int i=0;i<_op.length;i++){
-            double get = 0.0;
+            float get = 0.0f;
             Iterator it=_op[i].fromPages.iterator();
             int from;
             while(it.hasNext()){
                 from = (int)it.next();
-                get += (double)_rank[from]/_op[from].linkN;
+                get += (float)_rank[from]/_op[from].linkN;
             }
             if(_op[i].linkN==0){
                 rankSink(i, newRank);
@@ -195,8 +197,8 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer implements Serializab
     writer.close();
     return;
   }
-  public void rankSink(int where, double[] a){
-      double add = _rank[where]/(a.length-1)*lambda;
+  public void rankSink(int where, float[] a){
+      float add = _rank[where]/(a.length-1)*lambda;
       for(int i=0;i<a.length;i++){
           if(i!=where){
               a[i] += add;
@@ -240,8 +242,17 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer implements Serializab
     printRuntimeInfo("======== done loading =========");
     return null;
   }
+  
+  
+  public float getRank(String docName){
+      if(this._fileN.containsKey(docName)){
+          return this._rank[this._fileN.get(docName)];
+      }else{
+          return -1;
+      }
+  }
  
-  public void printTest(double[] n){
+  public void printTest(float[] n){
       for(int i=0;i<_op.length;i++){
           System.out.println("Page " + i + " has " + _op[i].linkN + " links");
           System.out.print(" and incoming links from ");
@@ -270,21 +281,26 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer implements Serializab
   public static void main(String[] args) throws IOException{
       Options options = new Options("conf/engine.conf");
       CorpusAnalyzerPagerank ca = new CorpusAnalyzerPagerank(options);
-      //ca.prepare();
-      //ca.compute();
-      //ca.load();
+      ca.prepare();
+      ca.compute();
+      ca.load();
       
-      /*
-      System.out.println(ca._rank.length + " pages");
+      //System.out.println(ca._rank.length + " pages");
       System.out.println("===== first 10 result =====");
-      double sum = 0.0;
-      for(int i=0;i<ca._rank.length && i<10;i++){
-          System.out.print(ca._rank[i] + ",");
-          sum += ca._rank[i];
+      float sum = 0.0f;
+      int i = 0;
+      for(String s : ca._fileN.keySet()){
+          System.out.print(s + ", ");
+          float rank = ca.getRank(s);
+          sum += rank;
+          System.out.println(rank);
+          if(i>=10)
+              break;
+          i++;
       }
       System.out.println();
       System.out.println("sum: " + sum);
       System.out.println(ca._fileN.get("Blue_whale"));
-      */
+
   }
 }

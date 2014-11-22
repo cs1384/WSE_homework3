@@ -1,6 +1,7 @@
 package edu.nyu.cs.cs2580;
 
 import java.io.IOException;
+import java.util.Vector;
 
 import edu.nyu.cs.cs2580.SearchEngine.Options;
 
@@ -52,4 +53,9 @@ public class IndexerInvertedCompressed extends Indexer {
   public int documentTermFrequency(String term, int docid) {
     return 0;
   }
+
+public Vector<DocumentIndexed> allDocPhrase(Vector<String> vector) {
+    // TODO Auto-generated method stub
+    return null;
+}
 }

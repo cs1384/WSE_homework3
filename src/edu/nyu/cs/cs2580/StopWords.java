@@ -22,7 +22,7 @@ public class StopWords implements Serializable
     ArrayList<String> words;
     public StopWords(Options options)
     {
-        System.out.println("Stopwords");
+        //System.out.println("Stopwords");
         words = new ArrayList<String>();
         try
         {
@@ -30,7 +30,7 @@ public class StopWords implements Serializable
             String line;
             while((line = bf.readLine()) != null)
             {
-                System.out.println(line);
+                //System.out.println(line);
                 words.add(line);
             }
             System.out.println("Added stopwords");

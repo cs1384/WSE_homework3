@@ -141,6 +141,8 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
     System.out.println(
         "Indexed " + Integer.toString(_numDocs) + " docs with "
         + Long.toString(_totalTermFrequency) + " terms.");
+    
+    if(this._corpusAnalyzer==null) System.out.println("test");
 
     String indexFile = _options._indexPrefix + "/OccuranceIndexer.idx";
     System.out.println("Store index to: " + indexFile);
@@ -345,7 +347,8 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
     return;
   }
   
-  public int ProcessTerms(String content, int docid){
+  @SuppressWarnings("unchecked")
+public int ProcessTerms(String content, int docid){
     Map<String, Integer> docTermFreq = new HashMap<String, Integer>();
     Stemmer stemmer = new Stemmer();
     int offset = 1; //offset starts from 1
@@ -423,7 +426,8 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
         new ObjectInputStream(new FileInputStream(indexFile));
     IndexerInvertedOccurrence loaded = 
         (IndexerInvertedOccurrence) reader.readObject();
-
+    
+    this._logMiner = loaded._logMiner;
     this._documents = loaded._documents;
     this._index = loaded._index;
     this._indexFileN = loaded._indexFileN;
@@ -436,9 +440,14 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
     for (Record rc : _index.values()) {
       this._totalTermFrequency += rc.fre;
     }
-   
     this._op = loaded._op;
-    //this._urlToDoc = loaded._urlToDoc;
+    
+    System.out.println("test");
+    this._corpusAnalyzer.load();
+    for(Document doc : this._documents){
+        doc.setPageRank(this._corpusAnalyzer.getRank(doc.getTitle()));
+    }
+    
     reader.close();
     this.printRuntimeInfo("======== Done =========");
     System.out.println(Integer.toString(_numDocs) + " documents loaded " +
@@ -745,7 +754,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
     try {
       Options options = new Options("conf/engine.conf");
       IndexerInvertedOccurrence a = new IndexerInvertedOccurrence(options);
-      a.constructIndex();
+      //a.constructIndex();
       a.loadIndex();
       //a.getPostingList("zatanna");
       
