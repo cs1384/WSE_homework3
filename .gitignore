@@ -1,3 +1,5 @@
 conf/engine.conf
 data/wiki
+data/index/*
+data/log/*
 *.class
