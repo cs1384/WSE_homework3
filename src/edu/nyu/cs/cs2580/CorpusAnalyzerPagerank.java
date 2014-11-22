@@ -283,9 +283,6 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer implements Serializab
       }
       System.out.println();
       System.out.println("sum: " + sum);
-      
       System.out.println(ca._fileN.get("Blue_whale"));
-      
-      
   }
 }
