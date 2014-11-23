@@ -14,20 +14,11 @@ $ java -cp src:lib/commons-io-2.4.jar -Xmx512m edu.nyu.cs.cs2580.SearchEngine --
 
 ===== testing  ======
 
-conjunctive retrieval:
-$ curl "http://localhost:25816/search?query=zatanna&ranker=CONJUNCTIVE&format=text"
-$ curl "http://localhost:25816/search?query=zatanna&ranker=FAVORITE&format=text"
+$ curl "http://localhost:25816/search?query=web+%22focused+crawler%22&ranker=COMPREHENSIVE&format=text"
 
-conjunctive + phrase retrieval:
-$ curl "http://localhost:25816/search?query=imprison+%22zatanna+zatara%22+catwoman&ranker=CONJUNCTIVE&format=text"
-$ curl "http://localhost:25816/search?query=imprison+%22zatanna+zatara%22+catwoman&ranker=FAVORITE&format=text"
+$ curl "http://localhost:25816/search?query=google+%22web+searching%22&ranker=COMPREHENSIVE&format=text"
 
-$ curl "http://localhost:25816/search?query=any+%22north+american%22+catwoman&ranker=CONJUNCTIVE&format=text"
-$ curl "http://localhost:25816/search?query=any+%22north+american%22&ranker=FAVORITE&format=text"
-
-$ curl "http://localhost:25816/search?query=google+%22web+searching%22&ranker=CONJUNCTIVE&format=text"
-$ curl "http://localhost:25816/search?query=google+%22web+searching%22+catwoman&ranker=FAVORITE&format=text"
-
+$ curl "http://localhost:25816/search?query=any+%22north+american%22&ranker=COMPREHENSIVE&format=text"
 
 
 ===== build up the wroking repository =====

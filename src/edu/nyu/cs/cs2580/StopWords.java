@@ -6,17 +6,21 @@
 package edu.nyu.cs.cs2580;
 
 import edu.nyu.cs.cs2580.SearchEngine.Options;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.Serializable;
 import java.util.ArrayList;
 
 /**
  *
  * @author Ali Local
  */
-public class StopWords
+public class StopWords implements Serializable
 {
+
+    private static final long serialVersionUID = 1L;
     ArrayList<String> words;
     public StopWords(Options options)
     {
@@ -24,6 +28,7 @@ public class StopWords
         words = new ArrayList<String>();
         try
         {
+            @SuppressWarnings("resource")
             BufferedReader bf = new BufferedReader(new FileReader(new File("stopwords.txt")));
             String line;
             while((line = bf.readLine()) != null)
