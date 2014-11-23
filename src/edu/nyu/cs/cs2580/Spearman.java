@@ -22,8 +22,7 @@ public class Spearman {
         }
         this._logMiner = new LogMinerNumviews();
         try {
-            this._corpusAnalyzer.load(NVpath);
-            PRconvertor.clear();
+            this._logMiner.load(NVpath);
         } catch (IOException e) {
             System.out.println("Numviews idx file doesn't exit");
             e.printStackTrace();

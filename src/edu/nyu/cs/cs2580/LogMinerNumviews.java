@@ -22,9 +22,16 @@ import edu.nyu.cs.cs2580.SearchEngine.Options;
  */
 public class LogMinerNumviews extends LogMiner implements Serializable{
 
+    public class Track implements Serializable{
+        private static final long serialVersionUID = 1L;
+        int avg = 0;
+        int count = 0;
+        int sum = 0;
+    }
+    
     private static final long serialVersionUID = 1077111905740085033L;
     protected Map<String, Integer> _numViews = new HashMap<String, Integer>();
-    protected int avg;
+    protected Track track = new Track();
     
   public LogMinerNumviews(Options options) {
     super(options);  
@@ -82,9 +89,12 @@ public class LogMinerNumviews extends LogMiner implements Serializable{
     
     //System.out.println("sum:"+sum);
     //System.out.println("count"+count);
+    this.track.count = count;
+    this.track.sum = sum;
     count /= 2;
     //System.out.println(sum/count);
-    avg = sum/count;
+    this.track.avg = sum/count;
+    System.out.println("Average:"+this.track.avg);
     
     /*
     for(String s : this._numViews.keySet()){
@@ -135,6 +145,7 @@ public class LogMinerNumviews extends LogMiner implements Serializable{
           
           this._numViews = loaded._numViews;
           this._options = loaded._options;
+          this.track = loaded.track;
           reader.close();
           
       } catch (ClassNotFoundException e) {
@@ -158,6 +169,7 @@ public class LogMinerNumviews extends LogMiner implements Serializable{
           
           this._numViews = loaded._numViews;
           this._options = loaded._options;
+          this.track = loaded.track;
           reader.close();
           
       } catch (ClassNotFoundException e) {
@@ -173,7 +185,7 @@ public class LogMinerNumviews extends LogMiner implements Serializable{
       LogMinerNumviews lm = new LogMinerNumviews(options);
       lm.compute();
       lm.load();
-      System.out.println(lm.avg);
+      System.out.println(lm.track.avg);
       System.out.println("===== first 10 result =====");
       int count = 0;
       for(String s : lm._numViews.keySet()){

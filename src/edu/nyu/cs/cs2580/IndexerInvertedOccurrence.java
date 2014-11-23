@@ -428,7 +428,6 @@ public int ProcessTerms(String content, int docid){
     IndexerInvertedOccurrence loaded = 
         (IndexerInvertedOccurrence) reader.readObject();
     
-    this._logMiner = loaded._logMiner;
     this._documents = loaded._documents;
     this._index = loaded._index;
     this._indexFileN = loaded._indexFileN;
@@ -449,6 +448,7 @@ public int ProcessTerms(String content, int docid){
         //System.out.println(doc.getTitle() + ", " + doc.getPageRank());
     }
     this._corpusAnalyzer = null;
+    
     
     this._logMiner.load();
     for(Document doc : this._documents){
