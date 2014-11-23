@@ -21,6 +21,13 @@ public class Spearman {
             e.printStackTrace();
         }
         this._logMiner = new LogMinerNumviews();
+        try {
+            this._corpusAnalyzer.load(NVpath);
+            PRconvertor.clear();
+        } catch (IOException e) {
+            System.out.println("Numviews idx file doesn't exit");
+            e.printStackTrace();
+        }
     }
     public float getCorrelation(){
         float[] ranks = _corpusAnalyzer._rank;
@@ -71,8 +78,10 @@ public class Spearman {
         float raw = _corpusAnalyzer._rank[index];
         return PRconvertor.get(raw);
     }
-    private int Yi(String docname){
-        return 1;
+    private float Yi(String docname){
+        if(this._logMiner._numViews.containsKey(docname))
+            return _logMiner._numViews.get(docname);
+        return 0;
     }
     
     public static void main(String[] args) {

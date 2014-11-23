@@ -446,7 +446,14 @@ public int ProcessTerms(String content, int docid){
     this._corpusAnalyzer.load();
     for(Document doc : this._documents){
         doc.setPageRank(this._corpusAnalyzer.getRank(doc.getTitle()));
-        System.out.println(doc.getTitle() + ", " + doc.getPageRank());
+        //System.out.println(doc.getTitle() + ", " + doc.getPageRank());
+    }
+    this._corpusAnalyzer = null;
+    
+    this._logMiner.load();
+    for(Document doc : this._documents){
+        doc.setNumViews(((LogMinerNumviews)this._logMiner)._numViews.get(doc.getTitle()));
+        System.out.println(doc.getTitle() + ", " + doc.getNumViews());
     }
     
     reader.close();

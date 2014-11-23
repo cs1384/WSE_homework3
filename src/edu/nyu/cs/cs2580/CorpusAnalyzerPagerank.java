@@ -245,11 +245,11 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer implements Serializab
         e.printStackTrace();
     }
     
-    System.out.println("=====test");
+    /*
     for(String s : this._fileN.keySet()){
         System.out.println(s + ", " + _rank[_fileN.get(s)]);
     }
-    
+    */
     printRuntimeInfo("======== done loading =========");
     return null;
   }

@@ -124,7 +124,8 @@ public class RankerComprehensive extends Ranker {
       relevance = (float) Math.pow(10,relevance);
       
       float pagerank = doc.getPageRank();
-      int numview = doc.getNumViews();
+      float numview = (float)doc.getNumViews()/
+              ((LogMinerNumviews)this._indexer._logMiner).avg;
       double score = 0.5 * relevance + 0.25 * pagerank + 0.25 * numview;
       
       return new ScoredDocument(doc, score);

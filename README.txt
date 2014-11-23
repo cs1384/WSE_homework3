@@ -7,7 +7,7 @@ Mining:
 $ java -cp src edu.nyu.cs.cs2580.SearchEngine --mode=mining --options=conf/engine.conf
 
 Spearman:
-$ java -cp src edu.nyu.cs.cs2580.Spearman ./data/index/pageRank.idx <path to numviews>
+$ java -cp src edu.nyu.cs.cs2580.Spearman ./data/index/pageRank.idx ./data/index/numViews.idx
 
 Indexing:
 $ java -cp src:lib/jsoup-1.8.1.jar:lib/commons-io-2.4.jar edu.nyu.cs.cs2580.SearchEngine --mode=index --options=conf/engine.conf
