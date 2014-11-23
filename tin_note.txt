@@ -1,0 +1,6 @@
+1. rankerComprehensive: compressed index didn’t update
+2. doc title should contain “_”
+	//doc.setTitle(filename.replace('_', ' '));
+	doc.setTitle(filename);
+3. assigning random numview in indexer should be removed.
+

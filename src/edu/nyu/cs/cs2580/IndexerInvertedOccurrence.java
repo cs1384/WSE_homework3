@@ -333,10 +333,11 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
     //docid starts from 1
     DocumentIndexed doc = new DocumentIndexed(_documents.size() + 1);
     
-    doc.setTitle(filename.replace('_', ' '));
+    //doc.setTitle(filename.replace('_', ' '));
+    doc.setTitle(filename);
     doc.setSize(ProcessTerms(content, doc._docid));
-    int numViews = (int) (Math.random() * 10000);
-    doc.setNumViews(numViews);
+    //int numViews = (int) (Math.random() * 10000);
+    //doc.setNumViews(numViews);
 
     String url = "en.wikipedia.org/wiki/" + filename;
     doc.setUrl(url);
@@ -442,10 +443,10 @@ public int ProcessTerms(String content, int docid){
     }
     this._op = loaded._op;
     
-    System.out.println("test");
     this._corpusAnalyzer.load();
     for(Document doc : this._documents){
         doc.setPageRank(this._corpusAnalyzer.getRank(doc.getTitle()));
+        System.out.println(doc.getTitle() + ", " + doc.getPageRank());
     }
     
     reader.close();
@@ -477,14 +478,13 @@ public int ProcessTerms(String content, int docid){
     int did = docid;
     //keep getting document until no next available 
     while((did = nextDocByTerms(query._tokens,did))!=Integer.MAX_VALUE){
-        System.out.println("= get doc from  tokens: " + did);
+        System.out.println("checking page : "+ did);
         keep = false;
         //check if the resulting doc contains all phrases 
         if(query instanceof QueryPhrase){
             for(Vector<String> phrase : ((QueryPhrase)query)._phrases){
                 //if not, break the for loop and get next doc base on tokens
                 int temp = nextPositionByPhrase(phrase,did,-1);
-                System.out.println("position:" + temp);
                 if(temp==Integer.MAX_VALUE){
                     keep = true;
                     break;
@@ -505,7 +505,6 @@ public int ProcessTerms(String content, int docid){
   
   public int nextPositionByPhrase(Vector<String> phrase, int docid, int pos){
     int did = nextDocByTerms(phrase, docid-1);
-    System.out.println("== get doc from phrase: " + did);
     if(docid != did){
       return Integer.MAX_VALUE;
     }
@@ -590,7 +589,6 @@ public int ProcessTerms(String content, int docid){
   }
   
   public int nextDocByTerms(Vector<String> terms, int curDid){
-    System.out.println("nextDocByTerms: "+curDid);
     if(terms.size()<=0){
       if(curDid<=0){
           //System.out.println("check0");
@@ -632,9 +630,7 @@ public int ProcessTerms(String content, int docid){
   }
   
   public int nextDocByTerm(String term, int curDid){
-      System.out.println("term: "+term);
       Vector<Posting> op = this.getPostingList(term);
-      System.out.println("posting list length: "+ op.size());
       if(op.size()>0){
           int largest = op.lastElement().did;
           //System.out.println("largest"+largest);

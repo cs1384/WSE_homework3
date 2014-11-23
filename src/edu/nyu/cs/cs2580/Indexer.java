@@ -44,7 +44,6 @@ public abstract class Indexer {
   public Indexer(Options options) {
     _options = options;
     _corpusAnalyzer = CorpusAnalyzer.Factory.getCorpusAnalyzerByOption(options);
-    System.out.println(((CorpusAnalyzerPagerank)_corpusAnalyzer).getLambda());
     _logMiner = LogMiner.Factory.getLogMinerByOption(options);
   }
 

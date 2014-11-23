@@ -124,7 +124,6 @@ public abstract class CorpusAnalyzer {
   public static class Factory {
     public static CorpusAnalyzer getCorpusAnalyzerByOption(Options options) {
       if (options._corpusAnalyzerType.equals("pagerank")) {
-          System.out.println("============= pagerank");
         return new CorpusAnalyzerPagerank(options);
       }
       return null;

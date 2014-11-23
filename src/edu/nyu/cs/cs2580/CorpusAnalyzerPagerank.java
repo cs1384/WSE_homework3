@@ -42,7 +42,6 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer implements Serializab
     
   public CorpusAnalyzerPagerank(Options options) {
     super(options);
-    System.out.println("create");
   }
 
   /**
@@ -98,7 +97,7 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer implements Serializab
           //set up fromPage
           HeuristicLinkExtractor extractor = new HeuristicLinkExtractor(file);
           int from = _fileN.get(extractor.getLinkSource());
-          //System.out.println("processing page " + from);
+          System.out.println("processing page " + from);
           if(_op[from]==null){
               _op[from] = new PageInfo();
           }
@@ -122,7 +121,6 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer implements Serializab
       } catch (IOException e) {
           e.printStackTrace();
       } 
-      
   }
   
   
@@ -237,6 +235,11 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer implements Serializab
     } catch (ClassNotFoundException e) {
         // TODO Auto-generated catch block
         e.printStackTrace();
+    }
+    
+    System.out.println("=====test");
+    for(String s : this._fileN.keySet()){
+        System.out.println(s + ", " + _rank[_fileN.get(s)]);
     }
     
     printRuntimeInfo("======== done loading =========");

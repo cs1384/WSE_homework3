@@ -20,8 +20,8 @@ class ScoredDocument implements Comparable<ScoredDocument> {
     buf.append(_doc._docid).append("\t");
     buf.append(_doc.getTitle()).append("\t");
     buf.append(_score).append("\t");
-    buf.append(_doc.getPageRank()).append("\t");
-    buf.append(_doc.getNumViews());
+    buf.append("pagerank:" + _doc.getPageRank()).append("\t");
+    buf.append("numview:" + _doc.getNumViews());
     return buf.toString();
   }
 
