@@ -9,6 +9,10 @@ import edu.nyu.cs.cs2580.SearchEngine.Options;
  */
 public class LogMinerNumviews extends LogMiner {
 
+    //added by Tin
+    public LogMinerNumviews(){}
+        
+    
   public LogMinerNumviews(Options options) {
     super(options);
   }

@@ -24,9 +24,10 @@ import edu.nyu.cs.cs2580.SearchEngine.Options;
  */
 public class CorpusAnalyzerPagerank extends CorpusAnalyzer implements Serializable{
     private static final long serialVersionUID = 1077111905740085032L;
-    private Map<String, Integer> _fileN = new HashMap<String, Integer>();
-    private PageInfo[] _op;
-    private float[] _rank;
+    protected Map<String, Integer> _fileN = new HashMap<String, Integer>();
+    protected PageInfo[] _op;
+    protected float[] _rank;
+    protected String _idxPath = null;
     
     
     private float lambda = 0.5f; 
@@ -42,6 +43,10 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer implements Serializab
     
   public CorpusAnalyzerPagerank(Options options) {
     super(options);
+  }
+  
+  public void setIdxPath(String path){
+      this._idxPath = path;
   }
 
   /**
@@ -248,6 +253,39 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer implements Serializab
     printRuntimeInfo("======== done loading =========");
     return null;
   }
+  
+  public Object load(String path) throws IOException {
+      System.out.println("Loading using " + this.getClass().getName());
+      this.printRuntimeInfo("======== start loading =========");
+      
+      System.out.println("Load pagerank from: " + path);
+      
+      try {
+      ObjectInputStream reader =
+              new ObjectInputStream(new FileInputStream(path));
+          CorpusAnalyzerPagerank loaded = 
+              (CorpusAnalyzerPagerank) reader.readObject();
+          
+          this._fileN = loaded._fileN;
+          this._op = loaded._op;
+          this._options = loaded._options;
+          this._rank = loaded._rank;
+          this.iterationTimes = loaded.iterationTimes;
+          this.lambda = loaded.lambda;
+          reader.close();
+          
+      } catch (ClassNotFoundException e) {
+          // TODO Auto-generated catch block
+          e.printStackTrace();
+      }
+      /*
+      for(String s : this._fileN.keySet()){
+          System.out.println(s + ", " + _rank[_fileN.get(s)]);
+      }
+      */
+      printRuntimeInfo("======== done loading =========");
+      return null;
+    }
   
   
   public float getRank(String docName){
