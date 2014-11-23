@@ -82,8 +82,12 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer implements Serializab
     }
     
     _op = new PageInfo[n];
+    int count = 1;
     for(final File file: fileList){
+        if(count%500==0)
+            System.out.println("processed " + count + " pages");
         processDocument(file);
+        count++;
     }
     
     printRuntimeInfo("===== finish preparing! =====");
@@ -97,7 +101,6 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer implements Serializab
           //set up fromPage
           HeuristicLinkExtractor extractor = new HeuristicLinkExtractor(file);
           int from = _fileN.get(extractor.getLinkSource());
-          System.out.println("processing page " + from);
           if(_op[from]==null){
               _op[from] = new PageInfo();
           }
@@ -168,7 +171,7 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer implements Serializab
         float[] newRank = new float[_rank.length];
         for(int i=0;i<_op.length;i++){
             float get = 0.0f;
-            Iterator it=_op[i].fromPages.iterator();
+            Iterator<Integer> it=_op[i].fromPages.iterator();
             int from;
             while(it.hasNext()){
                 from = (int)it.next();
@@ -259,7 +262,7 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer implements Serializab
       for(int i=0;i<_op.length;i++){
           System.out.println("Page " + i + " has " + _op[i].linkN + " links");
           System.out.print(" and incoming links from ");
-          Iterator it = _op[i].fromPages.iterator();
+          Iterator<Integer> it = _op[i].fromPages.iterator();
           int index;
           while(it.hasNext()){
               index = (int)it.next();

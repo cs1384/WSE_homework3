@@ -34,9 +34,9 @@ $ curl "http://localhost:25816/search?query=google+%22web+searching%22+catwoman&
 
 $ git clone https://github.com/cs1384/WSE_homework3.git
 $ cd <where you store this directory>
-$ mkdir index
 $ mkdir conf
 $ cp engine_ori.conf conf/engine.conf
 $ cd data
+$ mkdir index
 $ ln -s <path to your local wiki folder>
 
