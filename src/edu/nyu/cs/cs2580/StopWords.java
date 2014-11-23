@@ -6,23 +6,21 @@
 package edu.nyu.cs.cs2580;
 
 import edu.nyu.cs.cs2580.SearchEngine.Options;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.io.Serializable;
 import java.util.ArrayList;
 
 /**
  *
  * @author Ali Local
  */
-public class StopWords implements Serializable
+public class StopWords
 {
     ArrayList<String> words;
     public StopWords(Options options)
     {
-        //System.out.println("Stopwords");
+        System.out.println("Stopwords");
         words = new ArrayList<String>();
         try
         {

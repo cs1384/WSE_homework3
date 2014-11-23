@@ -30,7 +30,10 @@ class QueryHandler implements HttpHandler {
     // The raw user query
     public String _query = "";
     // How many results to return
-    private int _numResults = 10;
+    public int _numResults = 10;
+    public int _prf_numdocs = 10;
+    public int _prf_numterms = 5;
+        
     
     // The type of the ranker we will be using.
     public enum RankerType {
@@ -82,7 +85,25 @@ class QueryHandler implements HttpHandler {
           } catch (IllegalArgumentException e) {
             // Ignored, search engine should never fail upon invalid user input.
           }
-        }
+        }else if (key.equals("numdocs"))
+                {
+                    try
+                    {
+                        _prf_numdocs = Integer.parseInt(val);
+                    } catch (IllegalArgumentException e)
+                    {
+                        // Ignored, search engine should never fail upon invalid user input.
+                    }
+                }else if (key.equals("numterms"))
+                {
+                    try
+                    {
+                        _prf_numterms = Integer.parseInt(val);
+                    } catch (IllegalArgumentException e)
+                    {
+                        // Ignored, search engine should never fail upon invalid user input.
+                    }
+                }
       }  // End of iterating over params
     }
   }
@@ -176,4 +197,3 @@ class QueryHandler implements HttpHandler {
     System.out.println("Finished query: " + cgiArgs._query);
   }
 }
-

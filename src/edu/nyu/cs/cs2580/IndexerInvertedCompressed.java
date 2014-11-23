@@ -1254,6 +1254,11 @@ public IndexerInvertedCompressed(Options options)
     }
 
     @Override
+    public int documentTermFrequency(String term, int docid)
+    {
+        return 0;
+    }
+    
     public int documentTermFrequency(String term, String url)
     {
         //System.out.println("term = " + term + " , url = " + url);

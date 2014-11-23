@@ -196,12 +196,19 @@ public class SearchEngine {
     Check(indexer != null,
         "Indexer " + SearchEngine.OPTIONS._indexerType + " not found!");
     indexer.loadIndex();
+    
     QueryHandler handler = new QueryHandler(SearchEngine.OPTIONS, indexer);
+    PRFHandler prfHandler = new PRFHandler(SearchEngine.OPTIONS, indexer);
+
+    //QueryHandler handler = new QueryHandler(SearchEngine.OPTIONS, indexer);
 
     // Establish the serving environment
     InetSocketAddress addr = new InetSocketAddress(SearchEngine.PORT);
     HttpServer server = HttpServer.create(addr, -1);
-    server.createContext("/", handler);
+    //server.createContext("/", handler);
+    server.createContext("/search", handler);
+    server.createContext("/prf", prfHandler);
+    
     server.setExecutor(Executors.newCachedThreadPool());
     server.start();
     System.out.println(
