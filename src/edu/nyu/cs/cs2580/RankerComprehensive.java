@@ -134,6 +134,7 @@ public class RankerComprehensive extends Ranker {
       
       float numview = (float) (Math.log(doc.getNumViews()+1)/
               Math.log(((LogMinerNumviews)this._indexer._logMiner).track.max+1)); 
+      numview /= 1000;
               
               //(float)doc.getNumViews()/((LogMinerNumviews)this._indexer._logMiner).track.avg >1? 1:
           //(float)doc.getNumViews()/((LogMinerNumviews)this._indexer._logMiner).track.avg;
@@ -144,7 +145,8 @@ public class RankerComprehensive extends Ranker {
       System.out.println("numview:"+numview);
       System.out.println("pagerank"+pagerank);
        */
-      double score = 0.5 * relevance + 0.25 * pagerank + 0.25 * numview;
+      double score = 0.7 * relevance + 0.15 * pagerank + 0.15 * numview;
+      //System.out.println(doc.getTitle() + "\t" +  relevance + "\t" + pagerank + "\t" + numview + "\t" + score);
       /*
       if(doc.getTitle().equals("Registered_user")){
           System.out.println("oriNum:"+doc.getNumViews());
