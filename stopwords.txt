@@ -16,11 +16,13 @@ do
 e
 f
 for
+from
 g
 go
 h
 he
 her
+http
 i
 if
 in
@@ -53,6 +55,10 @@ see
 she
 so
 t
+that
+this
+the
+they
 to
 too
 two

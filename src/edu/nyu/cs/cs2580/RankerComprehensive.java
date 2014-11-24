@@ -126,13 +126,15 @@ public class RankerComprehensive extends Ranker {
       float pagerank = doc.getPageRank();
       
       float numview = (float)doc.getNumViews()/((LogMinerNumviews)this._indexer._logMiner).track.avg;
+      /*
       System.out.println("oriNum:"+doc.getNumViews());
       System.out.println("avg:"+((LogMinerNumviews)this._indexer._logMiner).track.avg);
       System.out.println("relevance:"+relevance);
       System.out.println("numview:"+numview);
       System.out.println("pagerank"+pagerank);
+    */
       double score = 0.5 * relevance + 0.25 * pagerank + 0.25 * numview;
-      System.out.println("score"+score);
+      //System.out.println("score"+score);
       return new ScoredDocument(doc, score);
       
     }

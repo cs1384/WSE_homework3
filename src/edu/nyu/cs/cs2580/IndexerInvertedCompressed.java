@@ -63,11 +63,9 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable
     private static final long serialVersionUID = 1077111905740085031L;
 
     
-    public IndexerInvertedCompressed()
-    {
-    }
+    
 
-public IndexerInvertedCompressed(Options options)
+    public IndexerInvertedCompressed(Options options)
     {
         super(options);
         System.out.println("Using Indexer: " + this.getClass().getSimpleName());
@@ -249,8 +247,8 @@ public IndexerInvertedCompressed(Options options)
         doc.setSize(docWords);
         
         //assign random number to doc numViews
-        int numViews = (int) (Math.random() * 10000);
-        doc.setNumViews(numViews);
+        //int numViews = (int) (Math.random() * 10000);
+        //doc.setNumViews(numViews);
 
         String url = "en.wikipedia.org/wiki/" + title;
         doc.setUrl(url);
@@ -649,13 +647,74 @@ public IndexerInvertedCompressed(Options options)
         
         this._documents = loaded._documents;
         
-        // Compute numDocs and totalTermFrequency b/c Indexer is not serializable.
-        this._numDocs = _documents.size();
-        for (Integer freq : loaded._termCorpusFrequency.values())
+        try
         {
-            this._totalTermFrequency += freq;
-        }
+            // Compute numDocs and totalTermFrequency b/c Indexer is not serializable.
+            this._numDocs = _documents.size();
+            for (Integer freq : loaded._termCorpusFrequency.values())
+            {
+                this._totalTermFrequency += freq;
+            }
+            System.out.println("here 1");  
+            this._corpusAnalyzer.load();
+            for(Document doc : this._documents){
+                doc.setPageRank(this._corpusAnalyzer.getRank(doc.getTitle()));
+                //System.out.println(doc.getTitle() + ", " + doc.getPageRank());
+            }
+            System.out.println("here 2");
+            this._corpusAnalyzer = null;
+            System.out.println("here 3");
 
+            if(this._logMiner == null)
+            {
+                System.out.println("logminer is null");
+            }
+            else
+            {
+                System.out.println("logminer class = " + this._logMiner.getClass().getCanonicalName());
+            }
+            this._logMiner.load();
+            
+            System.out.println("here 4");
+            LogMinerNumviews numviewMiner = ((LogMinerNumviews)this._logMiner);
+            System.out.println("here 5");
+            
+            for(Entry x : numviewMiner._numViews.entrySet())
+            {
+                //System.out.println((String)x.getKey() + ":" + (int)x.getValue());
+            }
+            System.out.println("here 5a,   keyset len = " + numviewMiner._numViews.keySet().size());
+            
+            for(Document doc : this._documents)
+            {
+                String titleUS = doc.getTitle().replace(" ", "_");
+                
+                //System.out.println(doc.getTitle() + ":");
+                if(numviewMiner._numViews == null)
+                    System.out.println("numviews map is null");
+                int numViews = -1;
+                
+                if(numviewMiner._numViews.containsKey(titleUS))
+                {
+                    numviewMiner._numViews.get(titleUS);
+                    //System.out.println("found key " + doc.getTitle());
+                }
+                else
+                    System.out.println("key " + titleUS + " not in hashmap");
+                //System.out.println("numviews = " + numViews);
+                doc.setNumViews(numViews);
+                //System.out.println(doc.getTitle() + ", " + doc.getNumViews());
+                //System.out.println(doc.getNumViews());
+            }
+
+            System.out.println("here 6");
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        
+        
         this._index = loaded._index;
         this.skipList = loaded.skipList;
         this.posMap = loaded.posMap;
@@ -1029,6 +1088,13 @@ public IndexerInvertedCompressed(Options options)
         ArrayList<Integer> pos = new ArrayList<Integer>();
         for(int i=0;i<queryVec.size();i++)
         {
+            //System.out.println("query token = " + queryVec.get(i));
+            
+            //really shouldn't be doing this here, but would need to refactor otherwise
+            String w = Stemmer.stemmedToken(queryVec.get(i));
+            
+            queryVec.set(i,w);
+            //queryVec.set(i,queryVec.get(i));
             int n = next(queryVec.get(i), docid);
             //System.out.println("got n = " + n + "  ,  for docid = " + docid);
             if(n == Integer.MAX_VALUE)
@@ -1081,6 +1147,13 @@ public IndexerInvertedCompressed(Options options)
     
     public Vector<DocumentIndexed> allDocPhrase(Vector<String> phrase)
     {
+        Vector<String> tempPhrase = new Vector<String>();
+        for(String token : phrase)
+        {
+            tempPhrase.add(Stemmer.stemmedToken(token));
+        }
+        phrase = tempPhrase;
+            
         Vector<DocumentIndexed> results = new Vector<DocumentIndexed>();
         
         //first, get posting list sizes for each term, and look at docs in the smalles list
@@ -1089,9 +1162,13 @@ public IndexerInvertedCompressed(Options options)
         int minIndex = 0;
         for(int i=0;i<phrase.size();i++)
         {
-            //System.out.println("word = " + phrase.get(i));
+            System.out.println("word in phrase = " + phrase.get(i));
             String w = phrase.get(i);
-            //System.out.println("w = " + w);
+            
+            //w = Stemmer.stemmedToken(w);
+            
+            
+            System.out.println("stemmed w = " + w);
             if(!posMap.containsKey(w))
                 return results;
         
@@ -1104,14 +1181,18 @@ public IndexerInvertedCompressed(Options options)
                 min = _index.get(wordIndex).length;
                 minTerm = w;
                 minIndex = wordIndex;
-                //System.out.println("minIndex = " + minIndex);
+                System.out.println("minIndex = " + minIndex);
             }
         }
         
-        //System.out.println("final minIndex = " + minIndex);
+        System.out.println("final minIndex = " + minIndex);
+        
+        
         //now get docs from posting list for minTerm
         byte bArray[] = _index.get(minIndex);
         ArrayList<Integer> docsForMinTerm = getAllDocsInPosting(bArray);
+        
+        System.out.println("got docs for final minIndex");
         
         for(Integer doc : docsForMinTerm)
         {
@@ -1140,6 +1221,7 @@ public IndexerInvertedCompressed(Options options)
         
         for(int i=0;i<phrase.size();i++)
         {
+            //System.out.println("phrase token = " + phrase.get(i));
             int n = next_pos(phrase.get(i), docid, posBefore, docByte);
             
             //System.out.println("phrase = " + phrase.get(i) + "    got n = " + n + "  ,  for docid = " + docid);
@@ -1254,8 +1336,27 @@ public IndexerInvertedCompressed(Options options)
     }
 
     @Override
-    public int documentTermFrequency(String term, int docid)
+    public int documentTermFrequency(String term, int did)
     {
+        
+        String key = Stemmer.stemmedToken(term);
+        int i = posMap.get(key);
+        byte vec[] = _index.get(i);
+
+        //System.out.println("key = " + key);
+        //System.out.print(key + ": ");
+
+        ArrayList<Integer> nums = VByteEncoder.decode(vec);
+        for (int j = 0; j < nums.size();)
+        {
+            int doc = nums.get(j);
+            int numOffsets = nums.get(j+1);
+
+            if(doc == did)
+                return numOffsets;
+
+            j=j+2+numOffsets;
+        }
         return 0;
     }
     
@@ -1266,33 +1367,14 @@ public IndexerInvertedCompressed(Options options)
         {
             //System.out.println("contains");
             int did = _urlToDoc.get(url);
-            
-            String key = term;
-            int i = posMap.get(key);
-            byte vec[] = _index.get(i);
-
-            //System.out.println("key = " + key);
-            //System.out.print(key + ": ");
-            
-            ArrayList<Integer> nums = VByteEncoder.decode(vec);
-            for (int j = 0; j < nums.size();)
-            {
-                int doc = nums.get(j);
-                int numOffsets = nums.get(j+1);
-            
-                if(doc == did)
-                    return numOffsets;
-                
-                j=j+2+numOffsets;
-            }
-            
+            return documentTermFrequency(term, did);
         } 
         else
         {
             System.out.println("not contains");
             return 0;
         }
-        return 0;
+        //return 0;
     }
 
     /**
