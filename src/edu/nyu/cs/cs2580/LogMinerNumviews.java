@@ -123,26 +123,6 @@ public class LogMinerNumviews extends LogMiner implements Serializable{
         System.out.println("log file doesn't exist");
         e.printStackTrace();
     }
-<<<<<<< HEAD
-   
-=======
-    */
-    
-    /*Output to the file*/
-    File dir_to_index = new File(_options._indexPrefix);
-    if (!dir_to_index.exists()){
-    	//make directory if index directory not exist
-    	new File(_options._indexPrefix).mkdir();
-    }
-    
-    String numviewsFile = _options._indexPrefix + "/numViews.idx";
-    System.out.println("Store numviews to: " + numviewsFile);
-    ObjectOutputStream writer
-        = new ObjectOutputStream(new FileOutputStream(numviewsFile));
-    writer.writeObject(this); //write the entire class into the file
-    writer.close();
-    return;
->>>>>>> cda3fb62ae37d07f022f38bdf4690861afea4856
   }
   
   

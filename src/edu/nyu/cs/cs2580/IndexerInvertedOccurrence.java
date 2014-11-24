@@ -59,6 +59,9 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
   private Map<String, Vector<Posting>> _op = 
       new TreeMap<String, Vector<Posting>>();
   
+  private Map<String, Vector<Posting>> _working = 
+          new HashMap<String, Vector<Posting>>();
+  
   //map url to docid to support documentTermFrequency method,optional 
   //private Map<String, Integer> _urlToDoc = new HashMap<String, Integer>(); 
   
@@ -469,45 +472,116 @@ public int ProcessTerms(String content, int docid){
         null : _documents.get(docid-1);
   }
 
+  public void setupWorkingMap(Query query){
+      _working.clear();
+      for(String term : query._tokens){
+          _working.put(term, getPostingList(term));
+      }
+      if(query instanceof QueryPhrase){
+          for(Vector<String> phrase : ((QueryPhrase) query)._phrases){
+              for(String term : phrase){
+                  _working.put(term, getPostingList(term));
+              }
+          }
+      }
+  }
+  
   /**
    * In HW2, you should be using {@link DocumentIndexed}.
    */
   public Document nextDoc(Query query, int docid) {
+        
+      setupWorkingMap(query);  
+      boolean keep = false;
+      int did = docid;
     
-    if(query instanceof QueryPhrase){  
-      //System.out.println(((QueryPhrase)query)._tokens);
-      //System.out.println(((QueryPhrase)query)._phrases);
-    }else{
-      //System.out.println(query._tokens);
-    }
-    
-    boolean keep = false;
-    int did = docid;
-    //keep getting document until no next available 
-    while((did = nextDocByTerms(query._tokens,did))!=Integer.MAX_VALUE){
-        System.out.println("checking page : "+ did);
-        keep = false;
-        //check if the resulting doc contains all phrases 
-        if(query instanceof QueryPhrase){
-            for(Vector<String> phrase : ((QueryPhrase)query)._phrases){
-                //if not, break the for loop and get next doc base on tokens
-                int temp = nextPositionByPhrase(phrase,did,-1);
-                if(temp==Integer.MAX_VALUE){
-                    keep = true;
-                    break;
-                }
-            }
-        }
-      if(keep){
-        continue;
-      }else{
-        //create return object if passed all phrase test and return
-        DocumentIndexed result = this._documents.get(did-1); 
-        return result;
+      //keep getting document until no next available 
+      while((did = nextDocByTerms(query._tokens,did))!=Integer.MAX_VALUE){
+          System.out.println("checking page : "+ did);
+          keep = false;
+          //check if the resulting doc contains all phrases 
+          if(query instanceof QueryPhrase){
+              for(Vector<String> phrase : ((QueryPhrase)query)._phrases){
+                  //if not, break the for loop and get next doc base on tokens
+                  int temp = nextPositionByPhrase(phrase,did,-1);
+                  if(temp==Integer.MAX_VALUE){
+                      keep = true;
+                      break;
+                  }
+              }
+          }
+          if(keep){
+              continue;
+          }else{
+              //create return object if passed all phrase test and return
+              DocumentIndexed result = this._documents.get(did-1); 
+              return result;
+          }
       }
-    }
-    //no possible doc available
-    return null;
+      //no possible doc available
+      return null;
+  }
+  
+  public int nextDocByTerms(Vector<String> terms, int curDid){
+      if(terms.size()<=0){
+          if(curDid<=0){
+              return 1;
+          }else if(curDid>=_numDocs){
+              return Integer.MAX_VALUE;
+          }else{
+              return curDid+1;
+          }
+      }
+      int did = nextDocByTerm(terms.get(0), curDid);
+      boolean returnable = true;
+      int largestDid = did;
+      int i = 1;
+      int tempDid;
+      for(;i<terms.size();i++){
+          tempDid = nextDocByTerm(terms.get(i), curDid);
+          //one of the term will never find next
+          if(tempDid==Integer.MAX_VALUE){
+              return Integer.MAX_VALUE;
+          }
+          if(tempDid>largestDid){
+              largestDid = tempDid;
+          } 
+          if(tempDid!=did){
+              returnable = false;
+          }
+      }    
+      if(returnable){
+          return did;
+      }else{
+          return nextDocByTerms(terms, largestDid-1);
+      }
+  }
+  public int nextDocByTerm(String term, int curDid){
+      Vector<Posting> op = _working.get(term);
+      if(op.size()>0){
+          int largest = op.lastElement().did;
+          if(largest <= curDid){
+              return Integer.MAX_VALUE;
+          }
+          if(op.firstElement().did > curDid){
+              return op.firstElement().did;
+          }
+          return binarySearchDoc(op,0,op.size()-1,curDid);
+      }else{
+          return Integer.MAX_VALUE;
+      }
+  }
+  public int binarySearchDoc(Vector<Posting> op, int low, int high, int curDid){
+      int mid;
+      while((high-low)>1){
+        mid = (low+high)/2;
+        if(op.get(mid).did <= curDid){
+          low = mid;
+        }else{
+          high = mid;
+        }
+      }
+      return op.get(high).did;
   }
   
   public int nextPositionByPhrase(Vector<String> phrase, int docid, int pos){
@@ -540,15 +614,12 @@ public int ProcessTerms(String content, int docid){
     }else{
       return nextPositionByPhrase(phrase, docid, largestPos);
     }
-    
   }
-  
   public int nextPositionByTerm(String term, int docid, int pos){
-    Vector<Posting> list = this.getPostingList(term);
+    Vector<Posting> list = _working.get(term);
     //System.out.println("size"+list.size());
     if(list.size()>0){
       Posting op = binarySearchPosting(list, 0, list.size()-1, docid);
-      
       if(op==null){
         return Integer.MAX_VALUE; 
       }
@@ -563,7 +634,23 @@ public int ProcessTerms(String content, int docid){
     }
     return Integer.MAX_VALUE;
   }
-  
+  public Posting binarySearchPosting(
+          Vector<Posting> list, int low, int high, int docid){
+      int mid;
+      while((high-low)>1){
+          mid = (low+high)/2;
+          if(list.get(mid).did < docid){
+            low = mid;
+          }else{
+            high = mid;
+          }
+      }
+      if(list.get(high).did==docid){
+          return list.get(high);
+      }else{
+          return list.get(low);
+      }
+  }
   public int binarySearchOffset(Vector<Integer> offsets, int low, int high, int pos){
     int mid;
     while((high-low)>1){
@@ -575,97 +662,6 @@ public int ProcessTerms(String content, int docid){
       }
     }
     return offsets.get(high);
-  }
-  
-  public Posting binarySearchPosting(
-      Vector<Posting> list, int low, int high, int docid){
-    int mid;
-    while((high-low)>1){
-      mid = (low+high)/2;
-      if(list.get(mid).did < docid){
-        low = mid;
-      }else{
-        high = mid;
-      }
-    }
-    if(list.get(high).did==docid){
-      return list.get(high);
-    }else{
-      return list.get(low);
-    }
-  }
-  
-  public int nextDocByTerms(Vector<String> terms, int curDid){
-    if(terms.size()<=0){
-      if(curDid<=0){
-          //System.out.println("check0");
-        return 1;
-      }else if(curDid>=_numDocs){
-          //System.out.println("check1");
-        return Integer.MAX_VALUE;
-      }else{
-          //System.out.println("check2");
-        return curDid+1;
-      }
-    }
-    int did = nextDocByTerm(terms.get(0), curDid);
-    boolean returnable = true;
-    int largestDid = did;
-    int i = 1;
-    int tempDid;
-    for(;i<terms.size();i++){
-      tempDid = nextDocByTerm(terms.get(i), curDid);
-      //one of the term will never find next
-      if(tempDid==Integer.MAX_VALUE){
-          //System.out.println("check3");
-        return Integer.MAX_VALUE;
-      }
-      if(tempDid>largestDid){
-        largestDid = tempDid;
-      } 
-      if(tempDid!=did){
-        returnable = false;
-      }
-    }    
-    if(returnable){
-        //System.out.println("check4");
-      return did;
-    }else{
-        //System.out.println("check5");
-      return nextDocByTerms(terms, largestDid-1);
-    }
-  }
-  
-  public int nextDocByTerm(String term, int curDid){
-      Vector<Posting> op = this.getPostingList(term);
-      if(op.size()>0){
-          int largest = op.lastElement().did;
-          //System.out.println("largest"+largest);
-          if(largest <= curDid){
-              //System.out.println("check6");
-              return Integer.MAX_VALUE;
-          }
-          if(op.firstElement().did > curDid){
-              return op.firstElement().did;
-          }
-          return binarySearchDoc(op,0,op.size()-1,curDid);
-      }else{
-          //System.out.println("check7");
-          return Integer.MAX_VALUE;
-      }
-  }
-  
-  public int binarySearchDoc(Vector<Posting> op, int low, int high, int curDid){
-    int mid;
-    while((high-low)>1){
-      mid = (low+high)/2;
-      if(op.get(mid).did <= curDid){
-        low = mid;
-      }else{
-        high = mid;
-      }
-    }
-    return op.get(high).did;
   }
 
   @Override
