@@ -152,6 +152,10 @@ public class LogMinerNumviews extends LogMiner implements Serializable{
           // TODO Auto-generated catch block
           e.printStackTrace();
       }
+      catch (Exception e) {
+          // TODO Auto-generated catch block
+          e.printStackTrace();
+      }
       
       return null;
   }
@@ -173,6 +177,10 @@ public class LogMinerNumviews extends LogMiner implements Serializable{
           reader.close();
           
       } catch (ClassNotFoundException e) {
+          // TODO Auto-generated catch block
+          e.printStackTrace();
+      }
+      catch (Exception e) {
           // TODO Auto-generated catch block
           e.printStackTrace();
       }

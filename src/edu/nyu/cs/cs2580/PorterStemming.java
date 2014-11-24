@@ -556,6 +556,17 @@ class Stemmer {
     i_end = k + 1;
     i = 0;
   }
+  
+  public static String stemmedToken(String token)
+  {
+      //System.out.print("Stemming " + token + " to ");
+      Stemmer stemmer = new Stemmer();
+      stemmer.add(token.toCharArray(), token.length());
+      stemmer.stem();
+      token = stemmer.toString();
+      //System.out.println(token);
+      return token;
+  }
 
   /**
    * Test program for demonstrating the Stemmer. It reads text from a a list of

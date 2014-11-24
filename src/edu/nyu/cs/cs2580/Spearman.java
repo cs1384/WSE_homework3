@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,7 +15,6 @@ public class Spearman {
     
     private CorpusAnalyzerPagerank _corpusAnalyzer = null;
     private LogMinerNumviews _logMiner = null;
-    Map<Float, Integer> PRconvertor = new HashMap<Float, Integer>();
     Map<String, Integer> numViews = new HashMap<String, Integer>();
 	Map<String, Double> pageRank = new HashMap<String, Double>();
 	private Map<String, Integer> numViews_Rank = new HashMap<String, Integer>();
@@ -24,7 +24,6 @@ public class Spearman {
         this._corpusAnalyzer = new CorpusAnalyzerPagerank();
         try {
             this._corpusAnalyzer.load(PRpath);
-            PRconvertor.clear();
         } catch (IOException e) {
             System.out.println("Pagerank idx file doesn't exit");
             e.printStackTrace();
@@ -63,7 +62,7 @@ public class Spearman {
 				}else if(doc2.getValue() < doc1.getValue()){
 					return -1;
 				}else{
-					return doc2.getKey().compareTo(doc1.getKey());
+					return doc1.getKey().compareTo(doc2.getKey());
 				}
 			}	
 		});
@@ -88,7 +87,7 @@ public class Spearman {
 				}else if(doc2.getValue() < doc1.getValue()){
 					return -1;
 				}else{
-					return doc2.getKey().compareTo(doc1.getKey());
+					return doc1.getKey().compareTo(doc2.getKey());
 				}
 			}	
 		});
@@ -107,16 +106,20 @@ public class Spearman {
 		double up_cumulative = 0.0;
 		Set<String> docs = numViews_rank.keySet();
 		double n = docs.size();
+		System.out.println(numViews_rank.size());
+		System.out.println(pageRank_rank.size());
 		for(String doc: docs){
 			if (numViews_rank.get(doc) != null){
 				x_k = numViews_rank.get(doc);
 			}else{
+				System.out.println(doc + "====numview not found======");
 				x_k = 0.0;
 			}
 			
 			if (pageRank_rank.get(doc) != null){
 				y_k = pageRank_rank.get(doc);
 			}else{
+				System.out.println(doc + "====pagerank not found======");
 				y_k = 0.0;
 			}
 			
@@ -126,11 +129,12 @@ public class Spearman {
 		double rho = 1 - 6*up_cumulative/(Math.pow(n, 3) - n);
 		return rho;
 	}
-    
+        
     public static void main(String[] args) {
         if(args.length<2){
             System.out.println("Not enough argument!");
         }else{
+        	
             Spearman spearman = new Spearman(args[0],args[1]);
             spearman.load_doc_HashMap();
             int count = 0;

@@ -63,11 +63,9 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable
     private static final long serialVersionUID = 1077111905740085031L;
 
     
-    public IndexerInvertedCompressed()
-    {
-    }
+    
 
-public IndexerInvertedCompressed(Options options)
+    public IndexerInvertedCompressed(Options options)
     {
         super(options);
         System.out.println("Using Indexer: " + this.getClass().getSimpleName());
@@ -226,7 +224,7 @@ public IndexerInvertedCompressed(Options options)
         
         
         mergedID = count;
-        System.out.println("hey");
+        //System.out.println("hey");
         String indexFile = _options._indexPrefix + "/compressed_corpus.idx";
         System.out.println("Store index to: " + indexFile);
         ObjectOutputStream writer = new ObjectOutputStream(new FileOutputStream(indexFile));
@@ -249,8 +247,8 @@ public IndexerInvertedCompressed(Options options)
         doc.setSize(docWords);
         
         //assign random number to doc numViews
-        int numViews = (int) (Math.random() * 10000);
-        doc.setNumViews(numViews);
+        //int numViews = (int) (Math.random() * 10000);
+        //doc.setNumViews(numViews);
 
         String url = "en.wikipedia.org/wiki/" + title;
         doc.setUrl(url);
@@ -649,13 +647,76 @@ public IndexerInvertedCompressed(Options options)
         
         this._documents = loaded._documents;
         
-        // Compute numDocs and totalTermFrequency b/c Indexer is not serializable.
-        this._numDocs = _documents.size();
-        for (Integer freq : loaded._termCorpusFrequency.values())
+        try
         {
-            this._totalTermFrequency += freq;
-        }
+            // Compute numDocs and totalTermFrequency b/c Indexer is not serializable.
+            this._numDocs = _documents.size();
+            for (Integer freq : loaded._termCorpusFrequency.values())
+            {
+                this._totalTermFrequency += freq;
+            }
+            //System.out.println("here 1");  
+            this._corpusAnalyzer.load();
+            for(Document doc : this._documents)
+            {
+                String titleUS = doc.getTitle().replace(" ", "_");
+                doc.setPageRank(this._corpusAnalyzer.getRank(titleUS));
+                //System.out.println(doc.getTitle() + ", " + doc.getPageRank());
+            }
+            //System.out.println("here 2");
+            this._corpusAnalyzer = null;
+            //System.out.println("here 3");
 
+            if(this._logMiner == null)
+            {
+                System.out.println("logminer is null");
+            }
+            else
+            {
+                //System.out.println("logminer class = " + this._logMiner.getClass().getCanonicalName());
+            }
+            this._logMiner.load();
+            
+            //System.out.println("here 4");
+            LogMinerNumviews numviewMiner = ((LogMinerNumviews)this._logMiner);
+            //System.out.println("here 5");
+            
+            //for(Entry x : numviewMiner._numViews.entrySet())
+            {
+                //System.out.println((String)x.getKey() + ":" + (int)x.getValue());
+            }
+            //System.out.println("here 5a,   keyset len = " + numviewMiner._numViews.keySet().size());
+            
+            for(Document doc : this._documents)
+            {
+                String titleUS = doc.getTitle().replace(" ", "_");
+                
+                //System.out.println(doc.getTitle() + ":");
+                if(numviewMiner._numViews == null)
+                    System.out.println("numviews map is null");
+                int numViews = -1;
+                
+                if(numviewMiner._numViews.containsKey(titleUS))
+                {
+                    numViews = numviewMiner._numViews.get(titleUS);
+                    //System.out.println("found key " + doc.getTitle());
+                }
+                else
+                    System.out.println("key " + titleUS + " not in hashmap");
+                //System.out.println("numviews = " + numViews);
+                doc.setNumViews(numViews);
+                //System.out.println(doc.getTitle() + ", " + doc.getNumViews());
+                //System.out.println(doc.getNumViews());
+            }
+
+            //System.out.println("here 6");
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        
+        
         this._index = loaded._index;
         this.skipList = loaded.skipList;
         this.posMap = loaded.posMap;
@@ -861,6 +922,7 @@ public IndexerInvertedCompressed(Options options)
     
 
     //This tells us which byte number the do starts from, for faster lookup
+    //private int next_pos(String w, int docId, int pos, int byteOffset)
     private int next_pos(String w, int docId, int pos, int byteOffset)
     {
         docId -= 1; //need to do this so we can use legacy code
@@ -1029,6 +1091,13 @@ public IndexerInvertedCompressed(Options options)
         ArrayList<Integer> pos = new ArrayList<Integer>();
         for(int i=0;i<queryVec.size();i++)
         {
+            //System.out.println("query token = " + queryVec.get(i));
+            
+            //really shouldn't be doing this here, but would need to refactor otherwise
+            String w = Stemmer.stemmedToken(queryVec.get(i));
+            
+            queryVec.set(i,w);
+            //queryVec.set(i,queryVec.get(i));
             int n = next(queryVec.get(i), docid);
             //System.out.println("got n = " + n + "  ,  for docid = " + docid);
             if(n == Integer.MAX_VALUE)
@@ -1081,47 +1150,120 @@ public IndexerInvertedCompressed(Options options)
     
     public Vector<DocumentIndexed> allDocPhrase(Vector<String> phrase)
     {
+        Vector<String> tempPhrase = new Vector<String>();
+        for(String token : phrase)
+        {
+            tempPhrase.add(Stemmer.stemmedToken(token));
+        }
+        phrase = tempPhrase;
+            
         Vector<DocumentIndexed> results = new Vector<DocumentIndexed>();
         
+        ArrayList<ArrayList<Integer>> docsForAllTerm = new ArrayList<ArrayList<Integer>>();
+        //HashMap<String, HashMap<Integer,Integer> > allMap = new HashMap<String, HashMap<Integer,Integer> >();
         //first, get posting list sizes for each term, and look at docs in the smalles list
-        int min = Integer.MAX_VALUE;
-        String minTerm = "";
-        int minIndex = 0;
+        //int min = Integer.MAX_VALUE;
+        //String minTerm = "";
+        //int minIndex = 0;
         for(int i=0;i<phrase.size();i++)
         {
-            //System.out.println("word = " + phrase.get(i));
+            System.out.println("word in phrase = " + phrase.get(i));
             String w = phrase.get(i);
-            //System.out.println("w = " + w);
+            
+            //w = Stemmer.stemmedToken(w);
+            
+            
+            System.out.println("stemmed w = " + w);
             if(!posMap.containsKey(w))
                 return results;
         
             int wordIndex = posMap.get(w);
             //System.out.println("wordIndex = " + wordIndex);
             //System.out.println("length = " + _index.get(wordIndex).length);
-            
+            /*
             if(min >= _index.get(wordIndex).length)
             {
                 min = _index.get(wordIndex).length;
                 minTerm = w;
                 minIndex = wordIndex;
-                //System.out.println("minIndex = " + minIndex);
+                System.out.println("minIndex = " + minIndex);
             }
+            */
+            
+            byte bArray[] = _index.get(wordIndex);
+            ArrayList<Integer> docsForThisTerm = getAllDocsInPosting(bArray);
+            //allMap.put(w, getAllDocsOffsetsInPosting(bArray));
+            docsForAllTerm.add(docsForThisTerm);
+        
         }
         
         //System.out.println("final minIndex = " + minIndex);
-        //now get docs from posting list for minTerm
-        byte bArray[] = _index.get(minIndex);
-        ArrayList<Integer> docsForMinTerm = getAllDocsInPosting(bArray);
+        //System.out.println("final min word = " + minTerm);
         
+        
+        //now get docs from posting list for minTerm
+        //byte bArray[] = _index.get(minIndex);
+        //ArrayList<Integer> docsForMinTerm = getAllDocsInPosting(bArray);
+        
+        //System.out.println("got docs for final minIndex");
+        /*
         for(Integer doc : docsForMinTerm)
         {
-            //System.out.println("x doc = " + doc);
+            System.out.println("x doc = " + doc);
         
         }
+        */
+        
+        
+        ArrayList<Integer> finalDocs = new ArrayList<Integer>(docsForAllTerm.get(0));
+        for(int c=1;c<docsForAllTerm.size();c++)
+        {
+            
+            ArrayList<Integer> tempList = new ArrayList<Integer>();
+            int i=0,j=0;
+            ArrayList<Integer> listI = finalDocs;
+            ArrayList<Integer> listJ = docsForAllTerm.get(c);
+            
+            int n = listI.size();
+            int m = listJ.size();
+            
+            while(i < n && j < m)
+            {
+                if(listI.get(i) < listJ.get(j))
+                    i++;
+                else if(listI.get(i) > listJ.get(j))
+                    j++;
+                else
+                {
+                    tempList.add(listI.get(i));
+                    i++;
+                    j++;
+                }
+            }
+            finalDocs = tempList;
+        }
+        
+        
+        for(Integer doc : finalDocs)
+        {
+            //System.out.println("final doc = " + doc);
+            //int docByte = findDoc(minTerm, doc);
+            //System.out.println("docByte = " + docByte);
+            //int x = nextDocPhrase(phrase, doc, 0, docByte);
+            //int x = nextDocPhrase(phrase, doc, 0, docByte);
+            int x = nextDocPhrase(phrase, doc, 0);
+            if(x != Integer.MAX_VALUE)
+            {
+                results.add(_documents.get(doc-1));
+                //System.out.println("return " + (doc-1));
+            }
+        }
+        /*
         for(Integer doc : docsForMinTerm)
         {
-            //System.out.println("doc = " + doc);
+            System.out.println("doc = " + doc);
             int docByte = findDoc(minTerm, doc);
+            System.out.println("docByte = " + docByte);
             int x = nextDocPhrase(phrase, doc, 0, docByte);
             if(x != Integer.MAX_VALUE)
             {
@@ -1129,18 +1271,22 @@ public IndexerInvertedCompressed(Options options)
                 //System.out.println("return " + (doc-1));
             }
         }
+        */
         return results;
     }
     /*
         
     */
-    public int nextDocPhrase(Vector<String> phrase, int docid, int posBefore, int docByte)
+    //public int nextDocPhrase(Vector<String> phrase, int docid, int posBefore, int docByte)
+    public int nextDocPhrase(Vector<String> phrase, int docid, int posBefore)
     {
         ArrayList<Integer> pos = new ArrayList<Integer>();
         
         for(int i=0;i<phrase.size();i++)
         {
-            int n = next_pos(phrase.get(i), docid, posBefore, docByte);
+            //System.out.println("phrase token = " + phrase.get(i));
+            //int n = next_pos(phrase.get(i), docid, posBefore, docByte);
+            int n = next_pos(phrase.get(i), docid, posBefore);
             
             //System.out.println("phrase = " + phrase.get(i) + "    got n = " + n + "  ,  for docid = " + docid);
             if(n == Integer.MAX_VALUE)
@@ -1168,18 +1314,19 @@ public IndexerInvertedCompressed(Options options)
         if(mismatch)
         {
             //System.out.println("mismatch");
-            int max = 0;
+            //int max = 0;
             int min = Integer.MAX_VALUE;
             for(int i=0;i<phrase.size();i++)
             {
-                if(pos.get(i) > max)
-                    max = pos.get(i);
+                //if(pos.get(i) > max)
+                //    max = pos.get(i);
                 if(pos.get(i) < min)
                     min = pos.get(i);
             }
             //System.out.println("min = " + min + " for doc id = " + docid);
             //return nextDocPhrase(phrase, docid, max-1);
-            return nextDocPhrase(phrase, docid, min, docByte);
+            //return nextDocPhrase(phrase, docid, min, docByte);
+            return nextDocPhrase(phrase, docid, min);
         }
         
         /*
@@ -1227,6 +1374,42 @@ public IndexerInvertedCompressed(Options options)
     }
     
     
+    HashMap<Integer,Integer> getAllDocsOffsetsInPosting(byte bList[])
+    {
+        //ArrayList<Integer> list = new ArrayList<Integer>();
+        HashMap<Integer,Integer> docOffsetMap = new HashMap<Integer,Integer> ();
+        int i = 0;
+        Integer nextLoc = 0;
+        //System.out.println("bList.length = " + bList.length);
+        while(i < bList.length)
+        {
+            int x[] = VByteEncoder.getFirstNum(bList, nextLoc);
+            int doc = x[0];
+            //System.out.println("add " + doc);
+            //list.add(nextLoc);
+            docOffsetMap.put(doc, nextLoc);
+            nextLoc = x[1];
+            
+            x = VByteEncoder.getFirstNum(bList, nextLoc);
+            int numOccur = x[0];
+            //System.out.println("num occur = " + numOccur);
+            nextLoc = x[1];
+            
+            for(int j=0;j<numOccur;j++)
+            {
+                x = VByteEncoder.getFirstNum(bList, nextLoc);
+                nextLoc = x[1];
+            }
+            
+            //next doc's offset:
+            i = nextLoc; //1 because of numOffsets
+            
+        }
+        return docOffsetMap;
+    }
+    
+    
+    
     @Override
     public int corpusDocFrequencyByTerm(String term)
     {/*
@@ -1254,8 +1437,27 @@ public IndexerInvertedCompressed(Options options)
     }
 
     @Override
-    public int documentTermFrequency(String term, int docid)
+    public int documentTermFrequency(String term, int did)
     {
+        
+        String key = Stemmer.stemmedToken(term);
+        int i = posMap.get(key);
+        byte vec[] = _index.get(i);
+
+        //System.out.println("key = " + key);
+        //System.out.print(key + ": ");
+
+        ArrayList<Integer> nums = VByteEncoder.decode(vec);
+        for (int j = 0; j < nums.size();)
+        {
+            int doc = nums.get(j);
+            int numOffsets = nums.get(j+1);
+
+            if(doc == did)
+                return numOffsets;
+
+            j=j+2+numOffsets;
+        }
         return 0;
     }
     
@@ -1266,33 +1468,14 @@ public IndexerInvertedCompressed(Options options)
         {
             //System.out.println("contains");
             int did = _urlToDoc.get(url);
-            
-            String key = term;
-            int i = posMap.get(key);
-            byte vec[] = _index.get(i);
-
-            //System.out.println("key = " + key);
-            //System.out.print(key + ": ");
-            
-            ArrayList<Integer> nums = VByteEncoder.decode(vec);
-            for (int j = 0; j < nums.size();)
-            {
-                int doc = nums.get(j);
-                int numOffsets = nums.get(j+1);
-            
-                if(doc == did)
-                    return numOffsets;
-                
-                j=j+2+numOffsets;
-            }
-            
+            return documentTermFrequency(term, did);
         } 
         else
         {
             System.out.println("not contains");
             return 0;
         }
-        return 0;
+        //return 0;
     }
 
     /**
