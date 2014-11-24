@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.io.File;
+import java.nio.file.Files;
 import java.io.BufferedWriter;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -15,6 +16,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Set;
+import java.io.FileNotFoundException;
 
 import edu.nyu.cs.cs2580.SearchEngine.Options;
 
@@ -121,7 +123,26 @@ public class LogMinerNumviews extends LogMiner implements Serializable{
         System.out.println("log file doesn't exist");
         e.printStackTrace();
     }
+<<<<<<< HEAD
    
+=======
+    */
+    
+    /*Output to the file*/
+    File dir_to_index = new File(_options._indexPrefix);
+    if (!dir_to_index.exists()){
+    	//make directory if index directory not exist
+    	new File(_options._indexPrefix).mkdir();
+    }
+    
+    String numviewsFile = _options._indexPrefix + "/numViews.idx";
+    System.out.println("Store numviews to: " + numviewsFile);
+    ObjectOutputStream writer
+        = new ObjectOutputStream(new FileOutputStream(numviewsFile));
+    writer.writeObject(this); //write the entire class into the file
+    writer.close();
+    return;
+>>>>>>> cda3fb62ae37d07f022f38bdf4690861afea4856
   }
   
   
@@ -159,9 +180,11 @@ public class LogMinerNumviews extends LogMiner implements Serializable{
           this.track = loaded.track;
           reader.close();
           
-      } catch (ClassNotFoundException e) {
+      } catch (FileNotFoundException e) {
           // TODO Auto-generated catch block
-          e.printStackTrace();
+    	  System.out.println("There is no such file or directory, check your conf file.");
+    	  e.printStackTrace();
+          //e.printStackTrace();
       }
       catch (Exception e) {
           // TODO Auto-generated catch block
@@ -187,9 +210,9 @@ public class LogMinerNumviews extends LogMiner implements Serializable{
           this.track = loaded.track;
           reader.close();
           
-      } catch (ClassNotFoundException e) {
+      } catch (FileNotFoundException e2) {
           // TODO Auto-generated catch block
-          e.printStackTrace();
+          System.out.println("There is no such file or directory, check your conf file.");
       }
       catch (Exception e) {
           // TODO Auto-generated catch block

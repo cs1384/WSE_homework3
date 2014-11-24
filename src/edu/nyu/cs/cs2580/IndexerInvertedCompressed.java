@@ -56,7 +56,7 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable
     
     private BufferedWriter docTermFreqWriter;
     private int mergedID = 0;
-    private int NUM_FREQ_TERMS = 1000;
+    //private int NUM_FREQ_TERMS = 1000;
     
     
     private StopWords stopWords;
