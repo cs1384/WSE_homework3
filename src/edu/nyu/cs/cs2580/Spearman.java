@@ -104,10 +104,10 @@ public class Spearman {
 		double x_k;
 		double y_k;
 		double up_cumulative = 0.0;
-		Set<String> docs = numViews_rank.keySet();
+		Set<String> docs = pageRank_rank.keySet();
 		double n = docs.size();
-		System.out.println(numViews_rank.size());
-		System.out.println(pageRank_rank.size());
+		//System.out.println(numViews_rank.size());
+		//System.out.println(pageRank_rank.size());
 		for(String doc: docs){
 			if (numViews_rank.get(doc) != null){
 				x_k = numViews_rank.get(doc);
@@ -146,8 +146,8 @@ public class Spearman {
                 System.out.println(s + ", " + spearman.numViews_Rank.get(s)+ ", "+spearman.pageRank_Rank.get(s));
                 count++;
             }
-            
-            System.out.println("The spearman coefficient is: ");
+            System.out.println();
+            System.out.print("The spearman coefficient is: ");
             System.out.println(spearman.compute_Spearman(spearman.numViews_Rank, spearman.pageRank_Rank));
         }
     }

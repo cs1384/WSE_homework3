@@ -62,6 +62,8 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
   private Map<String, Vector<Posting>> _working = 
           new HashMap<String, Vector<Posting>>();
   
+  private Query cachedQuery = null;
+  
   //map url to docid to support documentTermFrequency method,optional 
   //private Map<String, Integer> _urlToDoc = new HashMap<String, Integer>(); 
   
@@ -456,7 +458,7 @@ public int ProcessTerms(String content, int docid){
     this._logMiner.load();
     for(Document doc : this._documents){
         doc.setNumViews(((LogMinerNumviews)this._logMiner)._numViews.get(doc.getTitle()));
-        System.out.println(doc.getTitle() + ", " + doc.getNumViews());
+        //System.out.println(doc.getTitle() + ", " + doc.getNumViews());
     }
     
     reader.close();
@@ -473,7 +475,7 @@ public int ProcessTerms(String content, int docid){
   }
 
   public void setupWorkingMap(Query query){
-      _working.clear();
+       _working.clear();
       for(String term : query._tokens){
           _working.put(term, getPostingList(term));
       }
@@ -485,19 +487,52 @@ public int ProcessTerms(String content, int docid){
           }
       }
   }
-  
+  private boolean sameQuery(Query q){
+      if(this.cachedQuery==null){
+          this.cachedQuery = q;
+          return false;
+      }
+      if(q._tokens.size()==this.cachedQuery._tokens.size()){
+          for(int i=0;i<q._tokens.size();i++){
+              if(!q._tokens.get(i).equals(this.cachedQuery._tokens.get(i))){
+                  this.cachedQuery = q;
+                  return false;
+              }
+          }
+      }else{
+          this.cachedQuery = q;
+          return false;
+      }
+      if(q instanceof QueryPhrase){
+          if(((QueryPhrase)q)._phrases.size()==
+                  ((QueryPhrase)this.cachedQuery)._phrases.size()){
+              for(int i=0;i<((QueryPhrase)q)._phrases.size();i++){
+                  if(!((QueryPhrase)q)._phrases.get(i).equals(
+                          ((QueryPhrase)this.cachedQuery)._phrases.get(i))){
+                      this.cachedQuery = q;
+                      return false;
+                  }
+              }
+          }else{
+              this.cachedQuery = q;
+              return false;
+          }
+      }
+      return true;
+  }
   /**
    * In HW2, you should be using {@link DocumentIndexed}.
    */
   public Document nextDoc(Query query, int docid) {
-        
-      setupWorkingMap(query);  
+      
+      if(!sameQuery(query))
+          setupWorkingMap(query);  
       boolean keep = false;
       int did = docid;
     
       //keep getting document until no next available 
       while((did = nextDocByTerms(query._tokens,did))!=Integer.MAX_VALUE){
-          System.out.println("checking page : "+ did);
+          //System.out.println("checking page : "+ did);
           keep = false;
           //check if the resulting doc contains all phrases 
           if(query instanceof QueryPhrase){
@@ -666,8 +701,12 @@ public int ProcessTerms(String content, int docid){
 
   @Override
   public int corpusDocFrequencyByTerm(String term) {
-    Vector<Posting> temp = getPostingList(term);
-    return temp.size();
+      Vector<Posting> op;
+      if(_working.containsKey(term))
+          op = _working.get(term);
+      else
+          op = this.getPostingList(term);
+    return op.size();
   }
   
   public Vector<Posting> getPostingList(String term){
@@ -707,6 +746,7 @@ public int ProcessTerms(String content, int docid){
         // TODO Auto-generated catch block
         e.printStackTrace();
       }
+      System.out.println("term: " + term + "," + result.size());
       return result;
     }
   }
@@ -714,7 +754,11 @@ public int ProcessTerms(String content, int docid){
   @Override
   public int corpusTermFrequency(String term) {
     int result = 0;
-    Vector<Posting> op = getPostingList(term);
+    Vector<Posting> op;
+    if(_working.containsKey(term))
+        op = _working.get(term);
+    else
+        op = this.getPostingList(term);
     for(Posting ps : op){
       result += ps.offsets.size();
     }
@@ -723,12 +767,22 @@ public int ProcessTerms(String content, int docid){
 
   @Override
   public int documentTermFrequency(String term, int docid){
-      return -1;
+      Vector<Posting> op;
+      if(_working.containsKey(term))
+          op = _working.get(term);
+      else
+          op = this.getPostingList(term);
+      Posting posting = binarySearchPosting(op,0,op.size()-1,docid);
+      return posting.offsets.size();
   }
   
   
   public int documentTermFrequency(String term, String url) {
-    Vector<Posting> op = this.getPostingList(term);
+      Vector<Posting> op;
+      if(_working.containsKey(term))
+          op = _working.get(term);
+      else
+          op = this.getPostingList(term);
     for(int i=0;i<op.size();i++){
       if(_documents.get(op.get(i).did-1).getUrl().equals(url)){
         return op.get(i).offsets.size();

@@ -1,7 +1,9 @@
 package edu.nyu.cs.cs2580;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
@@ -34,7 +36,12 @@ public class RankerComprehensive extends Ranker {
                   all.add(scoreDocument(qp,doc._docid));
                   doc = (DocumentIndexed) this._indexer.nextDoc(qp, doc._docid);
               }
-              Collections.sort(all, Collections.reverseOrder());
+              Collections.sort(all, new Comparator<ScoredDocument>(){
+                @Override
+                public int compare(ScoredDocument o1, ScoredDocument o2) {
+                   return o2.compareTo(o1);
+                }
+              });
               Vector<ScoredDocument> results = new Vector<ScoredDocument>();
               for (int i = 0; i < all.size() && i < numResults; ++i) {
                 results.add(all.get(i));
@@ -132,9 +139,18 @@ public class RankerComprehensive extends Ranker {
       System.out.println("relevance:"+relevance);
       System.out.println("numview:"+numview);
       System.out.println("pagerank"+pagerank);
-    */
+       */
       double score = 0.5 * relevance + 0.25 * pagerank + 0.25 * numview;
-      //System.out.println("score"+score);
+      /*
+      if(doc.getTitle().equals("Registered_user")){
+          System.out.println("oriNum:"+doc.getNumViews());
+          System.out.println("avg:"+((LogMinerNumviews)this._indexer._logMiner).track.avg);
+          System.out.println("relevance:"+relevance);
+          System.out.println("numview:"+numview);
+          System.out.println("pagerank"+pagerank);
+          System.out.println("score"+score);
+      }
+      */
       return new ScoredDocument(doc, score);
       
     }
