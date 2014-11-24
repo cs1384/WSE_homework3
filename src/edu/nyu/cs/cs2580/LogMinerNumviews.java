@@ -27,6 +27,7 @@ public class LogMinerNumviews extends LogMiner implements Serializable{
 
     public class Track implements Serializable{
         private static final long serialVersionUID = 1L;
+        int max = 0;
         int avg = 0;
         int count = 0;
         int sum = 0;
@@ -82,7 +83,9 @@ public class LogMinerNumviews extends LogMiner implements Serializable{
                 tmp = line.trim().split(" ");
                 if (_numViews.get(tmp[1])!=null && tmp.length==3 && isInt(tmp[2])){
                     view_count = Integer.parseInt(tmp[2]);
-                    sum += Integer.parseInt(tmp[2]);
+                    if(view_count>this.track.max)
+                        this.track.max = view_count;
+                    sum += view_count;
                     _numViews.put(tmp[1], view_count);
                     count++;
                     if(count%500==0)
@@ -101,6 +104,7 @@ public class LogMinerNumviews extends LogMiner implements Serializable{
         //System.out.println(sum/count);
         this.track.avg = sum/count;
         System.out.println("Average:"+this.track.avg);
+        System.out.println("Max:"+this.track.max);
         
         /*
         for(String s : this._numViews.keySet()){

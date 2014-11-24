@@ -132,7 +132,11 @@ public class RankerComprehensive extends Ranker {
       
       float pagerank = doc.getPageRank();
       
-      float numview = (float)doc.getNumViews()/((LogMinerNumviews)this._indexer._logMiner).track.avg;
+      float numview = (float) (Math.log(doc.getNumViews()+1)/
+              Math.log(((LogMinerNumviews)this._indexer._logMiner).track.max+1)); 
+              
+              //(float)doc.getNumViews()/((LogMinerNumviews)this._indexer._logMiner).track.avg >1? 1:
+          //(float)doc.getNumViews()/((LogMinerNumviews)this._indexer._logMiner).track.avg;
       /*
       System.out.println("oriNum:"+doc.getNumViews());
       System.out.println("avg:"+((LogMinerNumviews)this._indexer._logMiner).track.avg);
