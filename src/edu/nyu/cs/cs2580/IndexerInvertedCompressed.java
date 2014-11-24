@@ -224,7 +224,7 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable
         
         
         mergedID = count;
-        System.out.println("hey");
+        //System.out.println("hey");
         String indexFile = _options._indexPrefix + "/compressed_corpus.idx";
         System.out.println("Store index to: " + indexFile);
         ObjectOutputStream writer = new ObjectOutputStream(new FileOutputStream(indexFile));
@@ -655,15 +655,17 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable
             {
                 this._totalTermFrequency += freq;
             }
-            System.out.println("here 1");  
+            //System.out.println("here 1");  
             this._corpusAnalyzer.load();
-            for(Document doc : this._documents){
-                doc.setPageRank(this._corpusAnalyzer.getRank(doc.getTitle()));
+            for(Document doc : this._documents)
+            {
+                String titleUS = doc.getTitle().replace(" ", "_");
+                doc.setPageRank(this._corpusAnalyzer.getRank(titleUS));
                 //System.out.println(doc.getTitle() + ", " + doc.getPageRank());
             }
-            System.out.println("here 2");
+            //System.out.println("here 2");
             this._corpusAnalyzer = null;
-            System.out.println("here 3");
+            //System.out.println("here 3");
 
             if(this._logMiner == null)
             {
@@ -671,19 +673,19 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable
             }
             else
             {
-                System.out.println("logminer class = " + this._logMiner.getClass().getCanonicalName());
+                //System.out.println("logminer class = " + this._logMiner.getClass().getCanonicalName());
             }
             this._logMiner.load();
             
-            System.out.println("here 4");
+            //System.out.println("here 4");
             LogMinerNumviews numviewMiner = ((LogMinerNumviews)this._logMiner);
-            System.out.println("here 5");
+            //System.out.println("here 5");
             
-            for(Entry x : numviewMiner._numViews.entrySet())
+            //for(Entry x : numviewMiner._numViews.entrySet())
             {
                 //System.out.println((String)x.getKey() + ":" + (int)x.getValue());
             }
-            System.out.println("here 5a,   keyset len = " + numviewMiner._numViews.keySet().size());
+            //System.out.println("here 5a,   keyset len = " + numviewMiner._numViews.keySet().size());
             
             for(Document doc : this._documents)
             {
@@ -707,7 +709,7 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable
                 //System.out.println(doc.getNumViews());
             }
 
-            System.out.println("here 6");
+            //System.out.println("here 6");
         }
         catch(Exception e)
         {
@@ -920,6 +922,7 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable
     
 
     //This tells us which byte number the do starts from, for faster lookup
+    //private int next_pos(String w, int docId, int pos, int byteOffset)
     private int next_pos(String w, int docId, int pos, int byteOffset)
     {
         docId -= 1; //need to do this so we can use legacy code
@@ -1156,10 +1159,12 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable
             
         Vector<DocumentIndexed> results = new Vector<DocumentIndexed>();
         
+        ArrayList<ArrayList<Integer>> docsForAllTerm = new ArrayList<ArrayList<Integer>>();
+        //HashMap<String, HashMap<Integer,Integer> > allMap = new HashMap<String, HashMap<Integer,Integer> >();
         //first, get posting list sizes for each term, and look at docs in the smalles list
-        int min = Integer.MAX_VALUE;
-        String minTerm = "";
-        int minIndex = 0;
+        //int min = Integer.MAX_VALUE;
+        //String minTerm = "";
+        //int minIndex = 0;
         for(int i=0;i<phrase.size();i++)
         {
             System.out.println("word in phrase = " + phrase.get(i));
@@ -1175,7 +1180,7 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable
             int wordIndex = posMap.get(w);
             //System.out.println("wordIndex = " + wordIndex);
             //System.out.println("length = " + _index.get(wordIndex).length);
-            
+            /*
             if(min >= _index.get(wordIndex).length)
             {
                 min = _index.get(wordIndex).length;
@@ -1183,23 +1188,77 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable
                 minIndex = wordIndex;
                 System.out.println("minIndex = " + minIndex);
             }
+            */
+            
+            byte bArray[] = _index.get(wordIndex);
+            ArrayList<Integer> docsForThisTerm = getAllDocsInPosting(bArray);
+            //allMap.put(w, getAllDocsOffsetsInPosting(bArray));
+            docsForAllTerm.add(docsForThisTerm);
+        
         }
         
-        System.out.println("final minIndex = " + minIndex);
-        System.out.println("final min word = " + minTerm);
+        //System.out.println("final minIndex = " + minIndex);
+        //System.out.println("final min word = " + minTerm);
         
         
         //now get docs from posting list for minTerm
-        byte bArray[] = _index.get(minIndex);
-        ArrayList<Integer> docsForMinTerm = getAllDocsInPosting(bArray);
+        //byte bArray[] = _index.get(minIndex);
+        //ArrayList<Integer> docsForMinTerm = getAllDocsInPosting(bArray);
         
-        System.out.println("got docs for final minIndex");
-        
+        //System.out.println("got docs for final minIndex");
+        /*
         for(Integer doc : docsForMinTerm)
         {
             System.out.println("x doc = " + doc);
         
         }
+        */
+        
+        
+        ArrayList<Integer> finalDocs = new ArrayList<Integer>(docsForAllTerm.get(0));
+        for(int c=1;c<docsForAllTerm.size();c++)
+        {
+            
+            ArrayList<Integer> tempList = new ArrayList<Integer>();
+            int i=0,j=0;
+            ArrayList<Integer> listI = finalDocs;
+            ArrayList<Integer> listJ = docsForAllTerm.get(c);
+            
+            int n = listI.size();
+            int m = listJ.size();
+            
+            while(i < n && j < m)
+            {
+                if(listI.get(i) < listJ.get(j))
+                    i++;
+                else if(listI.get(i) > listJ.get(j))
+                    j++;
+                else
+                {
+                    tempList.add(listI.get(i));
+                    i++;
+                    j++;
+                }
+            }
+            finalDocs = tempList;
+        }
+        
+        
+        for(Integer doc : finalDocs)
+        {
+            //System.out.println("final doc = " + doc);
+            //int docByte = findDoc(minTerm, doc);
+            //System.out.println("docByte = " + docByte);
+            //int x = nextDocPhrase(phrase, doc, 0, docByte);
+            //int x = nextDocPhrase(phrase, doc, 0, docByte);
+            int x = nextDocPhrase(phrase, doc, 0);
+            if(x != Integer.MAX_VALUE)
+            {
+                results.add(_documents.get(doc-1));
+                //System.out.println("return " + (doc-1));
+            }
+        }
+        /*
         for(Integer doc : docsForMinTerm)
         {
             System.out.println("doc = " + doc);
@@ -1212,19 +1271,22 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable
                 //System.out.println("return " + (doc-1));
             }
         }
+        */
         return results;
     }
     /*
         
     */
-    public int nextDocPhrase(Vector<String> phrase, int docid, int posBefore, int docByte)
+    //public int nextDocPhrase(Vector<String> phrase, int docid, int posBefore, int docByte)
+    public int nextDocPhrase(Vector<String> phrase, int docid, int posBefore)
     {
         ArrayList<Integer> pos = new ArrayList<Integer>();
         
         for(int i=0;i<phrase.size();i++)
         {
             //System.out.println("phrase token = " + phrase.get(i));
-            int n = next_pos(phrase.get(i), docid, posBefore, docByte);
+            //int n = next_pos(phrase.get(i), docid, posBefore, docByte);
+            int n = next_pos(phrase.get(i), docid, posBefore);
             
             //System.out.println("phrase = " + phrase.get(i) + "    got n = " + n + "  ,  for docid = " + docid);
             if(n == Integer.MAX_VALUE)
@@ -1252,18 +1314,19 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable
         if(mismatch)
         {
             //System.out.println("mismatch");
-            int max = 0;
+            //int max = 0;
             int min = Integer.MAX_VALUE;
             for(int i=0;i<phrase.size();i++)
             {
-                if(pos.get(i) > max)
-                    max = pos.get(i);
+                //if(pos.get(i) > max)
+                //    max = pos.get(i);
                 if(pos.get(i) < min)
                     min = pos.get(i);
             }
             //System.out.println("min = " + min + " for doc id = " + docid);
             //return nextDocPhrase(phrase, docid, max-1);
-            return nextDocPhrase(phrase, docid, min, docByte);
+            //return nextDocPhrase(phrase, docid, min, docByte);
+            return nextDocPhrase(phrase, docid, min);
         }
         
         /*
@@ -1309,6 +1372,42 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable
         }
         return list;
     }
+    
+    
+    HashMap<Integer,Integer> getAllDocsOffsetsInPosting(byte bList[])
+    {
+        //ArrayList<Integer> list = new ArrayList<Integer>();
+        HashMap<Integer,Integer> docOffsetMap = new HashMap<Integer,Integer> ();
+        int i = 0;
+        Integer nextLoc = 0;
+        //System.out.println("bList.length = " + bList.length);
+        while(i < bList.length)
+        {
+            int x[] = VByteEncoder.getFirstNum(bList, nextLoc);
+            int doc = x[0];
+            //System.out.println("add " + doc);
+            //list.add(nextLoc);
+            docOffsetMap.put(doc, nextLoc);
+            nextLoc = x[1];
+            
+            x = VByteEncoder.getFirstNum(bList, nextLoc);
+            int numOccur = x[0];
+            //System.out.println("num occur = " + numOccur);
+            nextLoc = x[1];
+            
+            for(int j=0;j<numOccur;j++)
+            {
+                x = VByteEncoder.getFirstNum(bList, nextLoc);
+                nextLoc = x[1];
+            }
+            
+            //next doc's offset:
+            i = nextLoc; //1 because of numOffsets
+            
+        }
+        return docOffsetMap;
+    }
+    
     
     
     @Override
