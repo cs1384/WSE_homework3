@@ -99,7 +99,7 @@ class PRFHandler implements HttpHandler
         {
             respondWithMsg(exchange,
                     "Ranker " + cgiArgs._rankerType.toString() + " is not valid!\n" + 
-                    "Please choose between fullscan, conjunctive, favorite, and comprehensive");
+                    "Please choose between fullscan, conjunctive, favorite, and comprehensive\n");
         }
 
         // Processing the query.
