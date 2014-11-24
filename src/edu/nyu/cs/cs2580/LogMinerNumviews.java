@@ -30,7 +30,7 @@ public class LogMinerNumviews extends LogMiner implements Serializable{
     }
     
     private static final long serialVersionUID = 1077111905740085033L;
-    protected Map<String, Integer> _numViews = new HashMap<String, Integer>();
+    protected Map<String, Double> _numViews = new HashMap<String, Double>();
     protected Track track = new Track();
     
   public LogMinerNumviews(Options options) {
@@ -60,7 +60,7 @@ public class LogMinerNumviews extends LogMiner implements Serializable{
     
     File corpus_folder = new File(_options._corpusPrefix);
     for(File file_name: corpus_folder.listFiles()){
-        _numViews.put(file_name.getName(), 0);
+        _numViews.put(file_name.getName(), 0.0);
     }
     
     /*Read the log, update the numview*/
@@ -68,15 +68,15 @@ public class LogMinerNumviews extends LogMiner implements Serializable{
     BufferedReader buffer_reader = new BufferedReader(file_log);
     String line = buffer_reader.readLine();
     String[] tmp;
-    Integer view_count = 0;
+    Double view_count = 0.0;
     
     Integer sum = 0;
     Integer count = 0;
     while(line != null){
     	    tmp = line.trim().split(" ");
     	    if (_numViews.get(tmp[1])!=null && tmp.length==3 && isInt(tmp[2])){
-    	        view_count = Integer.parseInt(tmp[2]);
-    	        sum += view_count;
+    	        view_count = (double) Integer.parseInt(tmp[2]);
+    	        sum += Integer.parseInt(tmp[2]);
     	        _numViews.put(tmp[1], view_count);
     	        count++;
     	        if(count%500==0)
