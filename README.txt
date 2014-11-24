@@ -1,3 +1,17 @@
+PageRank:
+	Find the optimal lambda, iteration value.
+	We do grid search in lambda = [0.1, 0.9], iteration = [1, 2]
+	The result is:
+			lambda			iteration				Spearman
+		1)		0.1				1				0.45537
+		2)		0.1				2				0.45347
+		3)		0.9				1				0.45822
+		4)		0.9				2				0.45033
+	Hence we set lambda = 0.9, iteration = 1.
+
+Compare PageRank and NumViews:
+	In our optimal setting, the Spearman coefficient is 0.45822.
+
 ===== operations =====
 
 Compile:
@@ -15,19 +29,6 @@ $ java -cp src:lib/jsoup-1.8.1.jar:lib/commons-io-2.4.jar edu.nyu.cs.cs2580.Sear
 Serving:
 $ java -cp src:lib/commons-io-2.4.jar -Xmx512m edu.nyu.cs.cs2580.SearchEngine --mode=serve --port=25816 --options=conf/engine.conf
 
-PageRank:
-	Find the optimal lambda, iteration value.
-	We do grid search in lambda = [0.1, 0.9], iteration = [1, 2]
-	The result is:
-			lambda			iteration			Spearman
-		1)    0.1				1				0.45537
-		2)	  0.1				2				0.45347
-		3)	  0.9 				1				0.45822
-		4)	  0.9				2				0.45033
-	Hence we set lambda = 0.9, iteration = 1.
-
-Compare PageRank and NumViews:
-	In our optimal setting, the Spearman coefficient is 0.45822.
 
 ===== testing  ======
 
