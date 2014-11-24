@@ -30,7 +30,7 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer implements Serializab
     protected String _idxPath = null;
     
     
-    private float lambda = 0.5f; 
+    private float lambda = 0.9f; 
     private int iterationTimes = 1;
     
     public class PageInfo implements Serializable{
@@ -195,7 +195,14 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer implements Serializab
     printRuntimeInfo("===== finish computing! =====");
     System.out.println(this._rank.length + " pages ranked!");
     
+    
+    File dir_to_index = new File(_options._indexPrefix);
+    if (!dir_to_index.exists()){
+    	//make directory if index directory not exist
+    	new File(_options._indexPrefix).mkdir();
+    }
     String rankFile = _options._indexPrefix + "/pageRank.idx";
+    
     System.out.println("Store pagerank to: " + rankFile);
     ObjectOutputStream writer
         = new ObjectOutputStream(new FileOutputStream(rankFile));
