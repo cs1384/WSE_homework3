@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.BufferedWriter;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -49,11 +50,12 @@ public class LogMinerNumviews extends LogMiner implements Serializable{
    * Note that the log contains view information for all articles in Wikipedia
    * and it is necessary to locate the information about articles within our
    * corpus.
+ * @throws FileNotFoundException 
    *
    * @throws IOException
    */
   @Override
-  public void compute() throws IOException {
+  public void compute() throws IOException{
     System.out.println("Computing using " + this.getClass().getName());
     
     /*Initialize the numview of wiki docs*/
@@ -64,53 +66,62 @@ public class LogMinerNumviews extends LogMiner implements Serializable{
     }
     
     /*Read the log, update the numview*/
-    FileReader file_log = new FileReader(_options._logPrefix+"/20140601-160000.log");
-    BufferedReader buffer_reader = new BufferedReader(file_log);
-    String line = buffer_reader.readLine();
-    String[] tmp;
-    Integer view_count = 0;
-    
-    Integer sum = 0;
-    Integer count = 0;
-    while(line != null){
-    	    tmp = line.trim().split(" ");
-    	    if (_numViews.get(tmp[1])!=null && tmp.length==3 && isInt(tmp[2])){
-    	        view_count = Integer.parseInt(tmp[2]);
-    	        sum += Integer.parseInt(tmp[2]);
-    	        _numViews.put(tmp[1], view_count);
-    	        count++;
-    	        if(count%500==0)
-    	            System.out.println("scanned " + count + " pages");
-    	    }
-    	    line = buffer_reader.readLine();
+    FileReader file_log;
+    try {
+        file_log = new FileReader(_options._logPrefix+"/20140601-160000.log");
+        BufferedReader buffer_reader = new BufferedReader(file_log);
+        String line = buffer_reader.readLine();
+        String[] tmp;
+        Integer view_count = 0;
+        
+        Integer sum = 0;
+        Integer count = 0;
+        while(line != null){
+                tmp = line.trim().split(" ");
+                if (_numViews.get(tmp[1])!=null && tmp.length==3 && isInt(tmp[2])){
+                    view_count = Integer.parseInt(tmp[2]);
+                    sum += Integer.parseInt(tmp[2]);
+                    _numViews.put(tmp[1], view_count);
+                    count++;
+                    if(count%500==0)
+                        System.out.println("scanned " + count + " pages");
+                }
+                line = buffer_reader.readLine();
+        }
+        buffer_reader.close();
+        
+        
+        //System.out.println("sum:"+sum);
+        //System.out.println("count"+count);
+        this.track.count = count;
+        this.track.sum = sum;
+        count /= 2;
+        //System.out.println(sum/count);
+        this.track.avg = sum/count;
+        System.out.println("Average:"+this.track.avg);
+        
+        /*
+        for(String s : this._numViews.keySet()){
+            float score = (float)_numViews.get(s)/avg >1?1:(float)_numViews.get(s)/avg;
+            _numViews.put(s, score);
+        }
+        */
+        
+        /*Output to the file*/
+        String numviewsFile = _options._indexPrefix + "/numViews.idx";
+        System.out.println("Store numviews to: " + numviewsFile);
+        File file = new File(_options._indexPrefix);
+        file.mkdirs();
+        ObjectOutputStream writer
+            = new ObjectOutputStream(new FileOutputStream(numviewsFile));
+        writer.writeObject(this); //write the entire class into the file
+        writer.close();
+        return;
+    } catch (FileNotFoundException e) {
+        System.out.println("log file doesn't exist");
+        e.printStackTrace();
     }
-    buffer_reader.close();
-    
-    
-    //System.out.println("sum:"+sum);
-    //System.out.println("count"+count);
-    this.track.count = count;
-    this.track.sum = sum;
-    count /= 2;
-    //System.out.println(sum/count);
-    this.track.avg = sum/count;
-    System.out.println("Average:"+this.track.avg);
-    
-    /*
-    for(String s : this._numViews.keySet()){
-        float score = (float)_numViews.get(s)/avg >1?1:(float)_numViews.get(s)/avg;
-        _numViews.put(s, score);
-    }
-    */
-    
-    /*Output to the file*/
-    String numviewsFile = _options._indexPrefix + "/numViews.idx";
-    System.out.println("Store numviews to: " + numviewsFile);
-    ObjectOutputStream writer
-        = new ObjectOutputStream(new FileOutputStream(numviewsFile));
-    writer.writeObject(this); //write the entire class into the file
-    writer.close();
-    return;
+   
   }
   
   
