@@ -696,7 +696,7 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable
                 
                 if(numviewMiner._numViews.containsKey(titleUS))
                 {
-                    numviewMiner._numViews.get(titleUS);
+                    numViews = numviewMiner._numViews.get(titleUS);
                     //System.out.println("found key " + doc.getTitle());
                 }
                 else
@@ -1186,6 +1186,7 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable
         }
         
         System.out.println("final minIndex = " + minIndex);
+        System.out.println("final min word = " + minTerm);
         
         
         //now get docs from posting list for minTerm
@@ -1196,13 +1197,14 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable
         
         for(Integer doc : docsForMinTerm)
         {
-            //System.out.println("x doc = " + doc);
+            System.out.println("x doc = " + doc);
         
         }
         for(Integer doc : docsForMinTerm)
         {
-            //System.out.println("doc = " + doc);
+            System.out.println("doc = " + doc);
             int docByte = findDoc(minTerm, doc);
+            System.out.println("docByte = " + docByte);
             int x = nextDocPhrase(phrase, doc, 0, docByte);
             if(x != Integer.MAX_VALUE)
             {

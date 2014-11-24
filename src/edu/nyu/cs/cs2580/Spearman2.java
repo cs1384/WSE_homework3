@@ -13,7 +13,11 @@ import java.util.Set;
 
 import edu.nyu.cs.cs2580.SearchEngine.Options;
 
+<<<<<<< HEAD
 public class Spearman2{
+=======
+public class Spearman_hh{
+>>>>>>> 5919419702027f8071916f527f73c039091167d8
 	private Map<String, Double> numViews = new HashMap<String, Double>();
 	private Map<String, Double> pageRank = new HashMap<String, Double>();
 	String numViews_path = "data/numview.idx";
