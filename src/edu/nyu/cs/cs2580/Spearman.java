@@ -15,7 +15,7 @@ public class Spearman {
     private CorpusAnalyzerPagerank _corpusAnalyzer = null;
     private LogMinerNumviews _logMiner = null;
     Map<Float, Integer> PRconvertor = new HashMap<Float, Integer>();
-    Map<String, Double> numViews = new HashMap<String, Double>();
+    Map<String, Integer> numViews = new HashMap<String, Integer>();
 	Map<String, Double> pageRank = new HashMap<String, Double>();
 	private Map<String, Integer> numViews_Rank = new HashMap<String, Integer>();
 	private Map<String, Integer> pageRank_Rank = new HashMap<String, Integer>();
@@ -48,7 +48,8 @@ public class Spearman {
     	numViews = _logMiner._numViews;
     	
     	pageRank_Rank = sort_map(pageRank);
-    	numViews_Rank = sort_map(numViews);
+    	
+    	numViews_Rank = sort_map2(numViews);
     }
     
     public Map<String, Integer> sort_map(Map<String, Double> original_map){
@@ -69,6 +70,31 @@ public class Spearman {
 		
 		int rank = 1;
 		for(Map.Entry<String, Double> doc : list) {
+			sort_map.put(doc.getKey(), rank);
+			rank ++;
+		}
+		return sort_map;		
+	}
+    
+    
+    public Map<String, Integer> sort_map2(Map<String, Integer> original_map){
+		Map<String, Integer> sort_map = new HashMap<String, Integer>();
+		List<Map.Entry<String, Integer>> list = new ArrayList<Map.Entry<String, Integer>>(original_map.entrySet());
+		
+		Collections.sort(list,new Comparator<Map.Entry<String,Integer>>(){
+			public int compare(Map.Entry<String, Integer> doc1, Map.Entry<String, Integer> doc2) {
+				if(doc2.getValue() > doc1.getValue()) {
+					return 1;
+				}else if(doc2.getValue() < doc1.getValue()){
+					return -1;
+				}else{
+					return doc2.getKey().compareTo(doc1.getKey());
+				}
+			}	
+		});
+		
+		int rank = 1;
+		for(Map.Entry<String, Integer> doc : list) {
 			sort_map.put(doc.getKey(), rank);
 			rank ++;
 		}
@@ -121,5 +147,4 @@ public class Spearman {
             System.out.println(spearman.compute_Spearman(spearman.numViews_Rank, spearman.pageRank_Rank));
         }
     }
-
 }
