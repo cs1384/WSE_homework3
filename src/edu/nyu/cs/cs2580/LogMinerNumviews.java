@@ -76,7 +76,7 @@ public class LogMinerNumviews extends LogMiner implements Serializable{
     	    tmp = line.trim().split(" ");
     	    if (_numViews.get(tmp[1])!=null && tmp.length==3 && isInt(tmp[2])){
     	        view_count = Integer.parseInt(tmp[2]);
-    	        sum += view_count;
+    	        sum += Integer.parseInt(tmp[2]);
     	        _numViews.put(tmp[1], view_count);
     	        count++;
     	        if(count%500==0)
